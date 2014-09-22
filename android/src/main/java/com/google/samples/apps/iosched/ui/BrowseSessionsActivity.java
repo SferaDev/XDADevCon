@@ -23,7 +23,10 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Spinner;
@@ -35,14 +38,16 @@ import com.google.samples.apps.iosched.model.TagMetadata;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
 import com.google.samples.apps.iosched.ui.widget.CollectionView;
 import com.google.samples.apps.iosched.ui.widget.DrawShadowFrameLayout;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 import com.google.samples.apps.iosched.util.PrefUtils;
 import com.google.samples.apps.iosched.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.samples.apps.iosched.util.LogUtils.*;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGE;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGW;
+import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 public class BrowseSessionsActivity extends BaseActivity implements SessionsFragment.Callbacks {
     private static final String TAG = makeLogTag(BrowseSessionsActivity.class);
@@ -93,19 +98,6 @@ public class BrowseSessionsActivity extends BaseActivity implements SessionsFrag
             String title = UIUtils.formatIntervalTimeString(interval[0], interval[1], null, this);
             ab.setTitle(title);
             mMode = MODE_TIME_FIT;
-            /* [ANALYTICS:SCREEN]
-             * TRIGGER:   View the Explore screen to find sessions fitting a time slot
-             * LABEL:    'Explore <time interval>'
-             * [/ANALYTICS]
-             */
-            AnalyticsManager.sendScreenView(SCREEN_LABEL + ": " + title);
-        } else {
-            /* [ANALYTICS:SCREEN]
-             * TRIGGER:   View the Explore screen (landing screen)
-             * LABEL:    'Explore'
-             * [/ANALYTICS]
-             */
-            AnalyticsManager.sendScreenView(SCREEN_LABEL);
         }
 
         overridePendingTransition(0, 0);
@@ -155,7 +147,7 @@ public class BrowseSessionsActivity extends BaseActivity implements SessionsFrag
                 Config.STALE_DATA_THRESHOLD_NOT_DURING_CONFERENCE;
         final boolean isStale = (staleTime >= staleThreshold);
         final boolean bootstrapDone = PrefUtils.isDataBootstrapDone(this);
-        final boolean mustShowBar = bootstrapDone && isStale && !inSnooze && !showingFilters;
+        final boolean mustShowBar = false;
 
         if (!mustShowBar) {
             mButterBar.setVisibility(View.GONE);
@@ -168,7 +160,6 @@ public class BrowseSessionsActivity extends BaseActivity implements SessionsFrag
                             updateFragContentTopClearance();
                             mLastDataStaleUserActionTime = UIUtils.getCurrentTime(
                                     BrowseSessionsActivity.this);
-                            requestDataRefresh();
                         }
                     }
             );
@@ -323,14 +314,7 @@ public class BrowseSessionsActivity extends BaseActivity implements SessionsFrag
             // nothing to do
             return;
         }
-        /* [ANALYTICS:EVENT]
-         * TRIGGER:   Select a top-level filter on the Explore screen.
-         * CATEGORY:  'Explore'
-         * ACTION:    'topfilter'
-         * LABEL:     The selected tag. For example, "THEME_DEVELOP", "TOPIC_ANDROID", etc.
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendEvent(SCREEN_LABEL, "topfilter", tag);
+
         mFilterTags[0] = tag;
 
         // Reset secondary filters
@@ -459,14 +443,6 @@ public class BrowseSessionsActivity extends BaseActivity implements SessionsFrag
             private void selectTag(String tag) {
                 if (!mFilterTags[filterIndex].equals(tag)) {
                     mFilterTags[filterIndex] = tag;
-                    /* [ANALYTICS:EVENT]
-                     * TRIGGER:   Select a secondary filter on the Explore screen.
-                     * CATEGORY:  'Explore'
-                     * ACTION:    'secondaryfilter'
-                     * LABEL:     The selected tag. For example, "THEME_DEVELOP", "TOPIC_ANDROID", etc.
-                     * [/ANALYTICS]
-                     */
-                    AnalyticsManager.sendEvent(SCREEN_LABEL, "secondaryfilter", tag);
                     reloadFromFilters();
                 }
             }
@@ -497,7 +473,6 @@ public class BrowseSessionsActivity extends BaseActivity implements SessionsFrag
         getMenuInflater().inflate(R.menu.browse_sessions, menu);
         // remove actions when in time interval mode:
         if (mMode != MODE_EXPLORE) {
-            menu.removeItem(R.id.menu_search);
             menu.removeItem(R.id.menu_refresh);
             menu.removeItem(R.id.menu_wifi);
             menu.removeItem(R.id.menu_debug);
@@ -509,33 +484,7 @@ public class BrowseSessionsActivity extends BaseActivity implements SessionsFrag
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_search:
-                /* [ANALYTICS:EVENT]
-                 * TRIGGER:   Click the search button on the Explore screen.
-                 * CATEGORY:  'Explore'
-                 * ACTION:    'launchsearch'
-                 * LABEL:     (none)
-                 * [/ANALYTICS]
-                 */
-                AnalyticsManager.sendEvent(SCREEN_LABEL, "launchsearch", "");
-                startActivity(new Intent(this, SearchActivity.class));
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onSessionSelected(String sessionId, View clickedView) {
-        /* [ANALYTICS:EVENT]
-         * TRIGGER:   Click on a session on the Explore screen.
-         * CATEGORY:  'Explore'
-         * ACTION:    'selectsession'
-         * LABEL:     session ID (for example "3284-fac320-2492048-bf391')
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendEvent(SCREEN_LABEL, "selectsession", sessionId);
         getLPreviewUtils().startActivityWithTransition(
                 new Intent(Intent.ACTION_VIEW,
                         ScheduleContract.Sessions.buildSessionUri(sessionId)),

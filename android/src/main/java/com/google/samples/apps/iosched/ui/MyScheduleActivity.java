@@ -17,10 +17,10 @@
 package com.google.samples.apps.iosched.ui;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ListFragment;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -40,7 +40,6 @@ import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.TypedValue;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -51,10 +50,15 @@ import com.google.samples.apps.iosched.model.ScheduleHelper;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
 import com.google.samples.apps.iosched.ui.widget.MyScheduleView;
 import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
-import com.google.samples.apps.iosched.util.*;
+import com.google.samples.apps.iosched.util.PrefUtils;
+import com.google.samples.apps.iosched.util.ThrottledContentObserver;
+import com.google.samples.apps.iosched.util.TimeUtils;
+import com.google.samples.apps.iosched.util.UIUtils;
 
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
 import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
@@ -120,7 +124,7 @@ public class MyScheduleActivity extends BaseActivity implements MyScheduleFragme
 
     @Override
     protected int getSelfNavDrawerItem() {
-        return NAVDRAWER_ITEM_MY_SCHEDULE;
+        return NAVDRAWER_ITEM_FULL_SCHEDULE;
     }
 
     @Override
@@ -128,13 +132,6 @@ public class MyScheduleActivity extends BaseActivity implements MyScheduleFragme
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_schedule);
         getLPreviewUtils().trySetActionBar();
-
-        /* [ANALYTICS:SCREEN]
-         * TRIGGER:   View the My Schedule screen.
-         * LABEL:     'My Schedule'
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendScreenView(SCREEN_LABEL);
 
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
         mScrollViewWide = (ScrollView) findViewById(R.id.main_content_wide);
@@ -268,28 +265,6 @@ public class MyScheduleActivity extends BaseActivity implements MyScheduleFragme
     private void removeLoginFailed() {
         mButterBar.setVisibility(View.GONE);
         deregisterHideableHeaderView(mButterBar);
-    }
-
-    @Override
-    public void onAuthFailure(String accountName) {
-        super.onAuthFailure(accountName);
-        UIUtils.setUpButterBar(mButterBar, getString(R.string.login_failed_text),
-                getString(R.string.login_failed_text_retry), new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        removeLoginFailed();
-                        retryAuth();
-
-                    }
-                }
-        );
-        registerHideableHeaderView(findViewById(R.id.butter_bar));
-    }
-
-    @Override
-    protected void onAccountChangeRequested() {
-        super.onAccountChangeRequested();
-        removeLoginFailed();
     }
 
     @Override
@@ -440,24 +415,6 @@ public class MyScheduleActivity extends BaseActivity implements MyScheduleFragme
         getMenuInflater().inflate(R.menu.my_schedule, menu);
         configureStandardMenuItems(menu);
         return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_search:
-                /* [ANALYTICS:EVENT]
-                 * TRIGGER:   Click the search button on the Schedule screen.
-                 * CATEGORY:  'Schedule'
-                 * ACTION:    'launchsearch'
-                 * LABEL:     (none)
-                 * [/ANALYTICS]
-                 */
-                AnalyticsManager.sendEvent(SCREEN_LABEL, "launchsearch", "");
-                startActivity(new Intent(this, SearchActivity.class));
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     protected void addDataObservers() {

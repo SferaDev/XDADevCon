@@ -28,7 +28,6 @@ import android.widget.Spinner;
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.ui.widget.CollectionView;
 import com.google.samples.apps.iosched.ui.widget.DrawShadowFrameLayout;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 import com.google.samples.apps.iosched.util.UIUtils;
 
 import java.util.ArrayList;
@@ -65,15 +64,6 @@ public class VideoLibraryActivity extends BaseActivity implements VideoLibraryFr
 
         setContentView(R.layout.activity_video_library);
         getLPreviewUtils().trySetActionBar();
-        mDrawShadowFrameLayout = (DrawShadowFrameLayout) findViewById(R.id.main_content);
-
-        /* [ANALYTICS:SCREEN]
-         * TRIGGER:   View the Video Library screen.
-         * LABEL:     'Video Library'
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendScreenView(SCREEN_LABEL);
-        LOGD("Tracker", SCREEN_LABEL);
 
         overridePendingTransition(0, 0);
         registerHideableHeaderView(findViewById(R.id.headerbar));
@@ -152,16 +142,6 @@ public class VideoLibraryActivity extends BaseActivity implements VideoLibraryFr
             return;
         }
         mSelectedYear = year;
-
-        /* [ANALYTICS:EVENT]
-         * TRIGGER:   Select a year on the Years dropdown in the Video Library.
-         * CATEGORY:  'Video Library'
-         * ACTION:    selectyear
-         * LABEL:     year (e.g. 2014, 2013, 2012)
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendEvent("Video Library", "selectyear", String.valueOf(year), 0L);
-
         frag.setFilterAndReload(mSelectedYear, mSelectedTopic);
     }
 
@@ -177,16 +157,6 @@ public class VideoLibraryActivity extends BaseActivity implements VideoLibraryFr
             return;
         }
         mSelectedTopic = topic;
-
-        /* [ANALYTICS:EVENT]
-         * TRIGGER:   Select a topic on the topics dropdown in the Video Library.
-         * CATEGORY:  'Video Library'
-         * ACTION:    selecttopic
-         * LABEL:     year (e.g. "Android", "Chrome", ...)
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendEvent("Video Library", "selecttopic", topic, 0L);
-
 
         frag.setFilterAndReload(mSelectedYear, mSelectedTopic);
     }

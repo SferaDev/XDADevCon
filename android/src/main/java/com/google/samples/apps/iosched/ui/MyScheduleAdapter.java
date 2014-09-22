@@ -17,7 +17,6 @@
 package com.google.samples.apps.iosched.ui;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.database.DataSetObserver;
 import android.graphics.Color;
@@ -28,18 +27,27 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.AbsListView;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.TextView;
 
 import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.model.ScheduleItem;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
-import com.google.samples.apps.iosched.util.*;
+import com.google.samples.apps.iosched.util.ImageLoader;
+import com.google.samples.apps.iosched.util.LPreviewUtilsBase;
+import com.google.samples.apps.iosched.util.TimeUtils;
+import com.google.samples.apps.iosched.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
 
-import static com.google.samples.apps.iosched.util.LogUtils.*;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGE;
+import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 /**
  * Adapter that produces views to render (one day of) the "My Schedule" screen.
@@ -68,11 +76,6 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
     int mDefaultSessionColor;
     int mDefaultStartTimeColor;
     int mDefaultEndTimeColor;
-
-    // increased every time the data is updated; used when deciding whether to
-    // recycle views so we can tell that a view is from a previous generation of
-    // the data and thus shouldn't be used
-    int mDataGeneration = 0;
 
     public MyScheduleAdapter(Context context, LPreviewUtilsBase lPreviewUtils) {
         mContext = context;
@@ -141,8 +144,8 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
 
         Resources res = mContext.getResources();
 
-        TextView startTimeView = null;
-        TextView endTimeView = null;
+        TextView startTimeView;
+        TextView endTimeView;
 
         int itemViewType = getItemViewType(position);
         boolean isNowPlaying = false;
@@ -165,26 +168,6 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
                     .inflate(layoutResId, parent, false);
             // save this view's type, so we only recycle when the view's type is the same:
             view.setTag(TAG_ID_FOR_VIEW_TYPE, itemViewType);
-            // Use one listener per view, so when the view is recycled, the listener is reused as
-            // well. Use the View tag as a container for the destination Uri.
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Object tag = v.getTag(R.id.myschedule_uri_tagkey);
-                    if (tag != null && tag instanceof Uri) {
-                        Uri uri = (Uri) tag;
-                        /* [ANALYTICS:EVENT]
-                         * TRIGGER:   Select a slot on My Agenda
-                         * CATEGORY:  'My Schedule'
-                         * ACTION:    'selectslot'
-                         * LABEL:     URI indicating session ID or time interval of slot.
-                         * [/ANALYTICS]
-                         */
-                        AnalyticsManager.sendEvent("My Schedule", "selectslot", uri.toString());
-                        mContext.startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                    }
-                }
-            });
         }
 
         if (position < 0 || position >= mItems.size()) {
@@ -202,7 +185,7 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
         FrameLayout boxView = (FrameLayout) view.findViewById(R.id.box);
         TextView slotTitleView = (TextView) view.findViewById(R.id.slot_title);
         TextView slotSubtitleView = (TextView) view.findViewById(R.id.slot_subtitle);
-        ImageButton giveFeedbackButton = (ImageButton) view.findViewById(R.id.give_feedback_button);
+        //ImageButton giveFeedbackButton = (ImageButton) view.findViewById(R.id.give_feedback_button);
         int heightNormal = res.getDimensionPixelSize(R.dimen.my_schedule_item_height);
         int heightBreak = ViewGroup.LayoutParams.WRAP_CONTENT;
         int heightPast = res.getDimensionPixelSize(R.dimen.my_schedule_item_height_past);
@@ -262,9 +245,9 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
             boxView.setForeground(res.getDrawable(R.drawable.schedule_item_touchoverlay_dark));
             bgImageView.setVisibility(View.GONE);
             sessionImageView.setVisibility(View.GONE);
-            if (giveFeedbackButton != null) {
+            /*if (giveFeedbackButton != null) {
                 giveFeedbackButton.setVisibility(View.GONE);
-            }
+            }*/
             slotTitleView.setText(R.string.browse_sessions);
             slotTitleView.setTextColor(res.getColor(R.color.theme_primary));
             slotTitleView.setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL);
@@ -282,9 +265,9 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
             boxView.setForeground(null);
             bgImageView.setVisibility(View.GONE);
             sessionImageView.setVisibility(View.GONE);
-            if (giveFeedbackButton != null) {
+            /*if (giveFeedbackButton != null) {
                 giveFeedbackButton.setVisibility(View.GONE);
-            }
+            }*/
             slotTitleView.setText(item.title);
             slotTitleView.setTextColor(res.getColor(R.color.body_text_1));
             slotTitleView.setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL);
@@ -299,7 +282,7 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
             boxView.setForeground(res.getDrawable(R.drawable.schedule_item_touchoverlay));
             bgImageView.setVisibility(View.VISIBLE);
             sessionImageView.setVisibility(View.VISIBLE);
-            if (giveFeedbackButton != null) {
+            /*if (giveFeedbackButton != null) {
                 boolean showFeedbackButton = !item.hasGivenFeedback;
                 // Can't use isPastDuringConference because we want to show feedback after the
                 // conference too.
@@ -313,13 +296,6 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
                 giveFeedbackButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        /* [ANALYTICS:EVENT]
-                         * TRIGGER:   Click on the Send Feedback action for a session on the Schedule page.
-                         * CATEGORY:  'Session'
-                         * ACTION:    'Feedback'
-                         * LABEL:     session title/subtitle
-                         * [/ANALYTICS]
-                         */
                         AnalyticsManager.sendEvent("My Schedule", "Feedback", item.title, 0L);
                         Intent feedbackIntent = new Intent(Intent.ACTION_VIEW,
                                 ScheduleContract.Sessions.buildSessionUri(item.sessionId),
@@ -327,7 +303,7 @@ public class MyScheduleAdapter implements ListAdapter, AbsListView.RecyclerListe
                         mContext.startActivity(feedbackIntent);
                     }
                 });
-            }
+            }*/
             int color = UIUtils.scaleSessionColorToDefaultBG(
                     item.backgroundColor == 0 ? mDefaultSessionColor : item.backgroundColor);
 

@@ -126,7 +126,7 @@ public class LPreviewUtilsBase {
 
     public void startActivityWithTransition(Intent intent, View clickedView,
             String sharedElementName) {
-        mActivity.startActivity(intent);
+        //mActivity.startActivity(intent);
     }
 
     public void setViewName(View v, String viewName) {

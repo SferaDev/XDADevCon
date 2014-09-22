@@ -16,18 +16,16 @@
 
 package com.google.samples.apps.iosched.ui;
 
+import android.app.ActionBar;
 import android.app.Fragment;
 import android.os.Bundle;
-import android.app.ActionBar;
 
 import com.google.samples.apps.iosched.BuildConfig;
 import com.google.samples.apps.iosched.R;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
 import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 public class SocialActivity extends BaseActivity {
@@ -49,14 +47,6 @@ public class SocialActivity extends BaseActivity {
                     .replace(R.id.container, createSocialFragment())
                     .commit();
         }
-
-        /* [ANALYTICS:SCREEN]
-         * TRIGGER:   View the Social screen
-         * LABEL:     'Social'
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendScreenView(SCREEN_LABEL);
-        LOGD("Tracker", SCREEN_LABEL);
 
         overridePendingTransition(0, 0);
     }

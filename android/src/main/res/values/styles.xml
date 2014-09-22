@@ -157,10 +157,10 @@
     <!-- Action bar -->
     <style name="ActionBar.Base" parent="FrameworkRoot.ActionBar">
         <item name="android:background">@drawable/actionbar_background</item>
-        <item name="android:icon">@drawable/actionbar_icon</item>
+        <item name="android:icon">@drawable/ic_action_devcon_dark</item>
         <item name="android:displayOptions">showHome|showTitle</item>
         <item name="android:titleTextStyle">@style/ActionBar.TitleText</item>
-        <item name="android:logo">@drawable/actionbar_logo</item>
+        <item name="android:logo">@drawable/ic_action_devcon_dark</item>
     </style>
 
     <style name="ActionBar" parent="ActionBar.Base" />
@@ -200,7 +200,6 @@
     <!-- Body content -->
     <style name="TextHeader">
         <item name="android:textSize">@dimen/text_size_large</item>
-        <item name="android:textStyle">@integer/font_textStyle_medium</item>
         <item name="android:fontFamily">@string/font_fontFamily_medium</item>
         <item name="android:textColor">@color/body_text_1</item>
         <item name="android:ellipsize">end</item>
@@ -292,7 +291,6 @@
         <item name="android:textSize">@dimen/text_size_large</item>
         <item name="android:textColor">@color/body_text_1_inverse</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textStyle">@integer/font_textStyle_medium</item>
         <item name="android:fontFamily">@string/font_fontFamily_medium</item>
         <item name="android:singleLine">true</item>
         <item name="android:padding">@dimen/map_content_padding</item>

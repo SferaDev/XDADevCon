@@ -16,7 +16,11 @@
 
 package com.google.samples.apps.iosched.model;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.ListIterator;
 
 public class ScheduleItemHelper {
 
@@ -28,13 +32,15 @@ public class ScheduleItemHelper {
      * Items should already be ordered by start time. Conflicts among mutableItems, if any,
      * won't be checked, and they will be left as is.
      **/
-    static public ArrayList<ScheduleItem> processItems(ArrayList<ScheduleItem> mutableItems, ArrayList<ScheduleItem> immutableItems) {
+    static public ArrayList<ScheduleItem> processItems(ArrayList<ScheduleItem> mutableItems, ArrayList<ScheduleItem> immutableItems, boolean checkConflicts) {
 
         // move mutables as necessary to accommodate conflicts with immutables:
         moveMutables(mutableItems, immutableItems);
 
         // mark conflicting immutable:
-        markConflicting(immutableItems);
+        if(checkConflicts) {
+            markConflicting(immutableItems);
+        }
 
         ArrayList<ScheduleItem> result = new ArrayList<ScheduleItem>();
         result.addAll(immutableItems);
@@ -43,7 +49,11 @@ public class ScheduleItemHelper {
         Collections.sort(result, new Comparator<ScheduleItem>() {
             @Override
             public int compare(ScheduleItem lhs, ScheduleItem rhs) {
-                return lhs.startTime < rhs.startTime ? -1 : 1;
+                if(lhs.startTime == rhs.startTime) {
+                    return rhs.subtitle.compareTo(lhs.subtitle);
+                } else {
+                    return lhs.startTime < rhs.startTime ? -1 : 1;
+                }
             }
         });
 

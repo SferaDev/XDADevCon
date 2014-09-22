@@ -28,7 +28,7 @@
         android:background="@color/welcome_background">
 
         <ImageView
-            android:src="@drawable/event_logo"
+            android:src="@drawable/ic_launcher"
             android:layout_width="200dp"
             android:layout_height="100dp"
             android:scaleType="fitCenter"
@@ -59,7 +59,6 @@
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_xlarge"
                         android:textColor="@color/theme_primary"
-                        android:textStyle="@integer/font_textStyle_medium"
                         android:fontFamily="@string/font_fontFamily_medium"
                         android:text="@string/welcome_to_google_i_o_app" />
 
@@ -102,7 +101,6 @@
             android:text="@string/decline"
             android:textColor="#8fff"
             android:textSize="@dimen/text_size_medium"
-            android:textStyle="@integer/font_textStyle_medium"
             android:fontFamily="@string/font_fontFamily_medium"
             android:textAllCaps="true"
             android:id="@+id/button_decline" />
@@ -115,7 +113,6 @@
             android:background="?photoItemForeground"
             android:text="@string/accept"
             android:textSize="@dimen/text_size_medium"
-            android:textStyle="@integer/font_textStyle_medium"
             android:fontFamily="@string/font_fontFamily_medium"
             android:textAllCaps="true"
             android:textColor="#fff" />

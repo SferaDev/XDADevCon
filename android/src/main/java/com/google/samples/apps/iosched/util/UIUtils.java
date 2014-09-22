@@ -29,8 +29,8 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
-import android.graphics.*;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -50,8 +50,6 @@ import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
 import com.google.samples.apps.iosched.provider.ScheduleContract.Rooms;
-import com.google.samples.apps.iosched.ui.phone.MapActivity;
-import com.google.samples.apps.iosched.ui.tablet.MapMultiPaneActivity;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -98,15 +96,8 @@ public class UIUtils {
      */
     private static final Pattern REGEX_HTML_ESCAPE = Pattern.compile(".*&\\S;.*");
 
-    private static CharSequence sNowPlayingText;
-    private static CharSequence sLivestreamNowText;
-    private static CharSequence sLivestreamAvailableText;
-
     public static final String GOOGLE_PLUS_PACKAGE_NAME = "com.google.android.apps.plus";
     public static final String YOUTUBE_PACKAGE_NAME = "com.google.android.youtube";
-
-    public static final int ANIMATION_FADE_IN_TIME = 250;
-    public static final String TRACK_ICONS_TAG = "tracks";
 
     private static SimpleDateFormat sDayOfWeekFormat = new SimpleDateFormat("E");
     private static DateFormat sShortTimeFormat = DateFormat.getTimeInstance(DateFormat.SHORT);
@@ -158,7 +149,7 @@ public class UIUtils {
             roomName = context.getString(R.string.unknown_room);
         }
 
-        if (!TextUtils.isEmpty(speakerNames)) {
+        if (speakerNames != null) {
             return speakerNames + "\n" + roomName;
         } else {
             return roomName;
@@ -266,14 +257,9 @@ public class UIUtils {
     public static String getSessionHashtagsString(String hashtags) {
         if (!TextUtils.isEmpty(hashtags)) {
             if (!hashtags.startsWith("#")) {
-                hashtags = "#" + hashtags;
+                return Config.CONFERENCE_HASHTAG + " " + "#" + hashtags;
             }
-
-            if (hashtags.contains(Config.CONFERENCE_HASHTAG_PREFIX)) {
-                return hashtags;
-            }
-
-            return Config.CONFERENCE_HASHTAG + " " + hashtags;
+            return hashtags;
         } else {
             return Config.CONFERENCE_HASHTAG;
         }
@@ -352,7 +338,6 @@ public class UIUtils {
      * <p>
      * <a href="http://stackoverflow.com/questions/13202805">Original code</a> by Dandre Allison.
      * @param context the current context of the device
-     * @see #isHoneycombTablet(android.content.Context)
      */
     public static void enableDisableActivitiesByFormFactor(Context context) {
         final PackageManager pm = context.getPackageManager();
@@ -391,14 +376,6 @@ public class UIUtils {
         } catch (ClassNotFoundException e) {
             LOGE(TAG, "Activity not found within package.", e);
         }
-    }
-
-    public static Class getMapActivityClass(Context context) {
-        if (UIUtils.isTablet(context)) {
-            return MapMultiPaneActivity.class;
-        }
-
-        return MapActivity.class;
     }
 
     /**

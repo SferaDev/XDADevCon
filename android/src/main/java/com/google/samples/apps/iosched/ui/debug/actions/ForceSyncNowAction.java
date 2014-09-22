@@ -16,15 +16,11 @@
 package com.google.samples.apps.iosched.ui.debug.actions;
 
 import android.content.ContentResolver;
-import android.accounts.Account;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.content.SyncResult;
 import android.os.Bundle;
 
-import com.google.samples.apps.iosched.sync.SyncHelper;
 import com.google.samples.apps.iosched.ui.debug.DebugAction;
-import com.google.samples.apps.iosched.util.AccountUtils;
 
 /**
  * A DebugAction that runs an immediate full sync.
@@ -37,13 +33,6 @@ public class ForceSyncNowAction implements DebugAction {
         new AsyncTask<Context, Void, Void>() {
             @Override
             protected Void doInBackground(Context... contexts) {
-                Account account = AccountUtils.getActiveAccount(context);
-                if (account == null) {
-                    callback.done(false, "Cannot sync if there is no active account.");
-                } else {
-                    new SyncHelper(contexts[0]).performSync(new SyncResult(),
-                      AccountUtils.getActiveAccount(context), bundle);
-                }
               return null;
             }
         }.execute(context);

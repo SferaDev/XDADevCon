@@ -50,7 +50,6 @@ import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.provider.ScheduleContract.Sessions;
 import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 import com.google.samples.apps.iosched.util.SessionsHelper;
 import com.google.samples.apps.iosched.util.UIUtils;
 
@@ -489,16 +488,6 @@ public class SessionLivestreamActivity extends BaseActivity implements
 
         // Play the video
         playVideo(youtubeVideoId);
-
-        if (mTrackPlay) {
-            /* [ANALYTICS:SCREEN]
-             * TRIGGER:   View the Live Stream screen for a sessino.
-             * LABEL:     'Live Streaming' + session title/subtitle
-             * [/ANALYTICS]
-             */
-            AnalyticsManager.sendScreenView("Live Streaming: " + title);
-            LOGD("Tracker", "Live Streaming: " + title);
-        }
 
         final String newYoutubeUrl = Config.YOUTUBE_SHARE_URL_PREFIX + youtubeVideoId;
         mSessionShareData = new SessionShareData(title, hashTag, newYoutubeUrl);

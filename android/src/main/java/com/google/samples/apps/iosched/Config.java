@@ -53,11 +53,10 @@ public class Config {
     public static final int CONFERENCE_YEAR = 2014;
 
     public static final long[][] CONFERENCE_DAYS = BuildConfig.CONFERENCE_DAYS;
-
-    public static final TimeZone CONFERENCE_TIMEZONE = TimeZone.getTimeZone(BuildConfig.CONFERENCE_TIMEZONE);
-
     public static final long CONFERENCE_START_MILLIS = CONFERENCE_DAYS[0][0];
     public static final long CONFERENCE_END_MILLIS = CONFERENCE_DAYS[CONFERENCE_DAYS.length-1][1];
+
+    public static final TimeZone CONFERENCE_TIMEZONE = TimeZone.getTimeZone(BuildConfig.CONFERENCE_TIMEZONE);
 
     // shorthand for some units of time
     public static final long SECOND_MILLIS = 1000;

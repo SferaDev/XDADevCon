@@ -30,63 +30,13 @@ android {
     compileSdkVersion lpreview ? "android-L" : 19
     buildToolsVersion '20.0.0'
 
-    productFlavors { 
-        io2014 {
-            applicationId = "com.google.samples.apps.iosched"
-            uniqueContentIdentifier = "iosched2014"
-
+    productFlavors {
+        devcon {
+            applicationId = "com.xda.devcon14"
+            uniqueContentIdentifier = "devcon14"
             manifestPlaceholders = [
-                    uniqueContentIdentifier:uniqueContentIdentifier,
-                    mapsApiKey:""
-            ]
-
-            buildConfigField "boolean", "HAS_VIDEO_LIBRARY", "true"
-            buildConfigField "boolean", "SUPPORTS_PEER_BADGE_SCANNING", "true"
-            buildConfigField "boolean", "SUPPORTS_REMOTE_VIEWING", "true"
-            buildConfigField "boolean", "USE_EXTERNAL_MAPS", "false"
-
-            buildConfigField "double", "VENUE_LATITUDE", "37.783107"
-            buildConfigField "double", "VENUE_LONGITUDE", "-122.403789"
-            buildConfigField "double", "VENUE_CAMERA_LATITUDE", "37.78308931536713"
-            buildConfigField "double", "VENUE_CAMERA_LONGITUDE", "-122.40409433841705"
-
-            buildConfigField "String", "CONFERENCE_NAME", "\"Google I/O 2014\""
-            buildConfigField "String", "CONFERENCE_DATA_MANIFEST_URL", "\"\""
-            buildConfigField "String", "OAUTH_APP_NAME", "\"GoogleIO-Android\""
-            buildConfigField "String", "OAUTH_API_KEY", "\"\""
-            buildConfigField "String", "GCM_API_KEY", "\"\""
-            buildConfigField "String", "GCM_SENDER_ID", "\"\""
-            buildConfigField "String", "GCM_URL", "\"\""
-
-            buildConfigField "String", "BOOTSTRAP_DATA_TIMESTAMP", "\"Thu, 10 Apr 2014 00:01:03 GMT\""
-            buildConfigField "String", "CONFERENCE_HASHTAG", "\"#io14\""
-            buildConfigField "String", "CONFERENCE_HASHTAG_PREFIX", "\"#io\""
-            buildConfigField "String", "CONFERENCE_TIMEZONE", "\"America/Los_Angeles\""
-            buildConfigField "String", "CONFERENCE_GAME_PACKAGE_NAME", "\"com.google.wolff.androidhunt2\""
-            buildConfigField "String", "UNIQUE_CONTENT_IDENTIFIER", "\""+uniqueContentIdentifier+"\""
-            buildConfigField "String", "WIFI_SSID", "\"IO2014\""
-            buildConfigField "String", "WIFI_PASSPHRASE", "\"letsdothis\""
-
-            buildConfigField "Class<? extends android.app.Fragment>", "SOCIAL_FRAGMENT_CLASS",
-                             "com.google.samples.apps.iosched.ui.HashtagsFragment.class"
-
-            buildConfigField "long[][]", "CONFERENCE_DAYS", "new long[][] {\n" +
-                    "            {  " +
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-06-25T07:00:00.000Z\"),\n" +
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-06-26T06:59:59.999Z\")\n" +
-                    "            }, {\n" +
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-06-26T07:00:00.000Z\"),\n"+
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-06-27T06:59:59.999Z\")\n"+
-                    "            },\n" +
-                    "        }"
-        }
-
-        droidconuk {
-            applicationId = "com.conferenceengineer.android.iosched.event1002"
-            uniqueContentIdentifier = "event1002"
-            manifestPlaceholders = [
-                    uniqueContentIdentifier:uniqueContentIdentifier,
-                    mapsApiKey:droidconuk14_android_maps_api_key
+                    uniqueContentIdentifier: uniqueContentIdentifier,
+                    mapsApiKey             : "" //DEPRECATED
             ]
 
             buildConfigField "boolean", "HAS_VIDEO_LIBRARY", "false"
@@ -94,53 +44,54 @@ android {
             buildConfigField "boolean", "SUPPORTS_REMOTE_VIEWING", "false"
             buildConfigField "boolean", "USE_EXTERNAL_MAPS", "true"
 
-            buildConfigField "double", "VENUE_LATITUDE", "51.535555"
-            buildConfigField "double", "VENUE_LONGITUDE", "-0.1047969"
-            buildConfigField "double", "VENUE_CAMERA_LATITUDE", "51.535556"
-            buildConfigField "double", "VENUE_CAMERA_LONGITUDE", "-0.104797"
+            buildConfigField "double", "VENUE_LATITUDE", "53.489664"
+            buildConfigField "double", "VENUE_LONGITUDE", "-2.241349"
+            buildConfigField "double", "VENUE_CAMERA_LATITUDE", "53.489664"
+            buildConfigField "double", "VENUE_CAMERA_LONGITUDE", "-2.241349"
 
-            buildConfigField "String", "CONFERENCE_NAME", "\"Droidcon London 2014\""
-            buildConfigField "String", "CONFERENCE_DATA_MANIFEST_URL", "\""+droidconuk14_android_manifest+"\""
-            buildConfigField "String", "OAUTH_APP_NAME", "\"DroidconUK2014-2014\""
-            buildConfigField "String", "OAUTH_API_KEY", "\""+droidconuk14_android_oauth_api_key+"\""
-            buildConfigField "String", "GCM_API_KEY", "\""+droidconuk14_gcm_api_key+"\""
-            buildConfigField "String", "GCM_SENDER_ID", "\""+droidconuk14_gcm_sender_id+"\""
-            buildConfigField "String", "GCM_URL", "\""+droidconuk14_gcm_url+"\""
+            buildConfigField "String", "CONFERENCE_NAME", "\"XDA:DevCon '14\""
+            buildConfigField "String", "CONFERENCE_DATA_MANIFEST_URL", "\"\"" //TODO
+            buildConfigField "String", "OAUTH_APP_NAME", "\"\"" //DEPRECATED
+            buildConfigField "String", "OAUTH_API_KEY", "\"\"" //DEPRECATED
+            buildConfigField "String", "GCM_API_KEY", "\"\"" //DEPRECATED
+            buildConfigField "String", "GCM_SENDER_ID", "\"\"" //DEPRECATED
+            buildConfigField "String", "GCM_URL", "\"\"" //DEPRECATED
 
             buildConfigField "String", "BOOTSTRAP_DATA_TIMESTAMP", "\"Tue,  4 Sep 2014 09:55:00 GMT\""
             buildConfigField "String", "CONFERENCE_GAME_PACKAGE_NAME", "\"\""
-            buildConfigField "String", "CONFERENCE_HASHTAG", "\"#droidconUK\""
-            buildConfigField "String", "CONFERENCE_HASHTAG_PREFIX", "\"#dcuk\""
+            buildConfigField "String", "CONFERENCE_HASHTAG", "\"#xda\""
+            buildConfigField "String", "CONFERENCE_HASHTAG_PREFIX", "\"#xda\""
             buildConfigField "String", "CONFERENCE_TIMEZONE", "\"Europe/London\""
-            buildConfigField "String", "UNIQUE_CONTENT_IDENTIFIER", "\""+uniqueContentIdentifier+"\""
-            buildConfigField "String", "WIFI_SSID", "\"DROIDCONUK\""
-            buildConfigField "String", "WIFI_PASSPHRASE", "\"lolwaitwaht\""
+            buildConfigField "String", "UNIQUE_CONTENT_IDENTIFIER", "\"\"" //TODO
+            buildConfigField "String", "WIFI_SSID", "\"notSet\"" //TODO
+            buildConfigField "String", "WIFI_PASSPHRASE", "\"\"" //TODO
 
             buildConfigField "Class<? extends android.app.Fragment>", "SOCIAL_FRAGMENT_CLASS",
-                             "com.google.samples.apps.iosched.ui.TwitterSocialFragment.class"
+                    "com.google.samples.apps.iosched.ui.HashtagsFragment.class"
 
             buildConfigField "long[][]", "CONFERENCE_DAYS", "new long[][] {\n" +
                     "            {  " +
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-10-30T08:00:00.000Z\"),\n" +
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-10-31T07:59:59.999Z\")\n" +
+                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-09-26T07:00:00.000Z\"),\n" +
+                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-09-27T06:59:59.999Z\")\n" +
                     "            }, {\n" +
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-10-31T08:00:00.000Z\"),\n"+
-                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-11-01T07:59:59.999Z\")\n"+
+                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-09-27T07:00:00.000Z\"),\n" +
+                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-09-28T06:59:59.999Z\")\n" +
+                    "            }, {\n" +
+                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-09-28T07:00:00.000Z\"),\n" +
+                    "               com.google.samples.apps.iosched.util.ParserUtils.parseTime(\"2014-09-29T06:59:59.999Z\")\n" +
                     "            },\n" +
                     "        }"
-
-
         }
     }
 
     sourceSets {
-        main.java.srcDirs = [ 
-            ioschedSourceBase + 'java',
-            'src/main/java'
+        main.java.srcDirs = [
+                ioschedSourceBase + 'java',
+                'src/main/java'
         ]
-        main.resources.srcDirs = [ 
-            ioschedSourceBase + 'res', 
-            'src/main/res'
+        main.resources.srcDirs = [
+                ioschedSourceBase + 'res',
+                'src/main/res'
         ] 
     }
 
@@ -171,8 +122,6 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            runProguard true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), file('proguard-project.txt')
             signingConfig signingConfigs.release
         }
     }
@@ -187,33 +136,18 @@ android {
 }
 
 dependencies {
-    wearApp project(':Wearable')
-    compile 'com.google.android.gms:play-services:5.0.89'
-    compile 'com.android.support:support-v13:20.+'
-    compile 'com.android.support:support-v4:20.+'
-    compile 'com.google.android.apps.dashclock:dashclock-api:+'
-    compile 'com.google.code.gson:gson:2.+'
     compile('com.google.api-client:google-api-client:1.+') {
         exclude group: 'xpp3', module: 'shared'
         exclude group: 'org.apache.httpcomponents', module: 'httpclient'
         exclude group: 'junit', module: 'junit'
         exclude group: 'com.google.android', module: 'android'
     }
-    compile 'com.google.api-client:google-api-client-android:1.17.+'
-    compile 'com.google.apis:google-api-services-plus:+'
-    compile 'com.github.japgolly.android:svg-android:2.0.6'
     compile fileTree(dir: 'libs', include: '*.jar')
     compile files('../third_party/glide/library/libs/glide-3.2.0a.jar')
     compile files('../third_party/basic-http-client/libs/basic-http-client-android-0.88.jar')
-
-    // Google Maps Android API utility library
-    compile('com.google.maps.android:android-maps-utils:0.3+') {
-        exclude group: "com.google.android.gms"
-    }
-
-    /* The two dependencies below are only required while we are using http
-       Drive appdata. When we start using AppData through GMS,
-       they should be removed. */
-    compile 'com.google.http-client:google-http-client-gson:+'
-    compile 'com.google.apis:google-api-services-drive:+'
+    compile 'com.android.support:support-v13:20.0.0'
+    compile 'com.android.support:support-v4:20.0.0'
+    compile 'com.google.code.gson:gson:2.+'
+    compile 'com.github.japgolly.android:svg-android:2.0.6'
+    compile files('libs/twitter4j-core-4.0.2.jar')
 }

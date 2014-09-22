@@ -16,7 +16,6 @@
 
 package com.google.samples.apps.iosched.appwidget;
 
-import android.accounts.Account;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -27,7 +26,6 @@ import android.net.Uri;
 import android.widget.RemoteViews;
 
 import com.google.samples.apps.iosched.R;
-import com.google.samples.apps.iosched.sync.SyncHelper;
 import com.google.samples.apps.iosched.ui.MyScheduleActivity;
 import com.google.samples.apps.iosched.ui.TaskStackBuilderProxyActivity;
 import com.google.samples.apps.iosched.util.AccountUtils;
@@ -57,15 +55,6 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
         final String action = widgetIntent.getAction();
 
         if (REFRESH_ACTION.equals(action)) {
-            LOGD(TAG, "received REFRESH_ACTION from widget");
-            final boolean shouldSync = widgetIntent.getBooleanExtra(EXTRA_PERFORM_SYNC, false);
-
-            // Trigger sync
-            Account chosenAccount = AccountUtils.getActiveAccount(context);
-            if (shouldSync && chosenAccount != null) {
-                SyncHelper.requestManualSync(chosenAccount);
-            }
-
             // Notify the widget that the list view needs to be updated.
             final AppWidgetManager mgr = AppWidgetManager.getInstance(context);
             final ComponentName cn = new ComponentName(context, ScheduleWidgetProvider.class);

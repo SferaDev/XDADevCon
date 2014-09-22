@@ -16,7 +16,14 @@
 
 package com.google.samples.apps.iosched.util;
 
-import android.app.*;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -159,6 +166,7 @@ public class WiFiUtils {
 
         public WiFiDialog() {}
 
+        @SuppressLint("ValidFragment")
         public WiFiDialog(boolean wifiEnabled) {
             super();
             mWiFiEnabled = wifiEnabled;
@@ -224,10 +232,6 @@ public class WiFiUtils {
      */
     public static boolean shouldOfferToSetupWifi(final Context context, boolean actively) {
         long now = UIUtils.getCurrentTime(context);
-        if (now < Config.WIFI_SETUP_OFFER_START) {
-            // too early to offer
-            return false;
-        }
         if (now > Config.CONFERENCE_END_MILLIS) {
             // too late
             return false;
@@ -236,16 +240,12 @@ public class WiFiUtils {
             // no wifi, no offer
             return false;
         }
-        if (!PrefUtils.isAttendeeAtVenue(context)) {
-            // wifi setup not relevant
-            return false;
-        }
         if (WiFiUtils.isWiFiApConfigured(context)) {
             // already set up
             return false;
         }
-        if (actively && PrefUtils.hasDeclinedWifiSetup(context)) {
-            // user said no
+        if (BuildConfig.WIFI_SSID == "notSet") {
+            //There are no values yet
             return false;
         }
         return true;

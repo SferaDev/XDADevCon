@@ -83,13 +83,13 @@
                 android:ellipsize="end"
                 android:maxLines="1" />
 
-            <ImageButton android:id="@+id/give_feedback_button"
+            <!--<ImageButton android:id="@+id/give_feedback_button"
                 android:layout_width="48dp"
                 android:layout_height="match_parent"
                 android:scaleType="center"
                 android:src="@drawable/ic_schedule_feedback"
                 android:contentDescription="@string/session_feedback_notification_ticker"
-                android:background="?photoItemForeground" />
+                android:background="?photoItemForeground" />-->
 
         </LinearLayout>
 

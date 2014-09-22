@@ -16,26 +16,28 @@
 
 package com.google.samples.apps.iosched.ui;
 
-import android.app.Application;
+import android.app.Fragment;
+import android.app.LoaderManager;
 import android.content.Context;
+import android.content.CursorLoader;
+import android.content.Loader;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.app.LoaderManager;
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.widget.*;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.CursorAdapter;
+import android.widget.ImageButton;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
 import com.google.samples.apps.iosched.ui.widget.CollectionView;
 import com.google.samples.apps.iosched.ui.widget.CollectionViewCallbacks;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 import com.google.samples.apps.iosched.util.UIUtils;
 
 import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
@@ -193,15 +195,6 @@ public class HashtagsFragment extends Fragment implements LoaderManager.LoaderCa
                 @Override
                 public void onClick(View view) {
                     UIUtils.showHashtagStream(mContext, hashtag);
-
-                    /* [ANALYTICS:EVENT]
-                     * TRIGGER:   Click on a hashtag on the Social screen to launch Google+
-                     * CATEGORY:  'Social'
-                     * ACTION:    selecthashtag
-                     * LABEL:     the selected hashtag, e.g. '#io14 #design'
-                     * [/ANALYTICS]
-                     */
-                    AnalyticsManager.sendEvent("Social", "selecthashtag", hashtag, 0L);
                 }
             });
         }

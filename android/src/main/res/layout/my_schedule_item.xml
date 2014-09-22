@@ -108,13 +108,13 @@
                 />
         </LinearLayout>
 
-        <ImageButton android:id="@+id/give_feedback_button"
+        <!--<ImageButton android:id="@+id/give_feedback_button"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="bottom|end"
             android:scaleType="center"
             android:src="@drawable/ic_schedule_feedback"
-            android:background="?photoItemForeground" />
+            android:background="?photoItemForeground" />-->
 
     </FrameLayout>
 </LinearLayout>

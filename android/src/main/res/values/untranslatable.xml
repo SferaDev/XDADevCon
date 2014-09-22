@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="partner_sony">Sony</string>
+    <string name="partner_nvidia">Nvidia</string>
+    <string name="partner_oppo">Oppo</string>
+    <string name="partner_oneplus">OnePlus</string>
+    <string name="partner_mediatek">MediaTek</string>
+    <string name="partner_mozilla">Mozilla</string>
+    <string name="partner_pebble">Pebble</string>
+    <string name="partner_ubuntu">Ubuntu</string>
+    <string name="partner_jolla">Jolla</string>
+    <string name="partner_spur">Spur</string>
+
+    <string name="twitter">Ask any question!</string>
+    <string name="twitter_intro">Feel free to ask us anything and we will review it during the event!</string>
+    <string name="twitter_tweet">Your question goes here</string>
+</resources>

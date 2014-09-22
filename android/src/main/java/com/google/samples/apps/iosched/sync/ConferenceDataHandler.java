@@ -23,32 +23,40 @@ import android.content.OperationApplicationException;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.text.TextUtils;
 
-import com.google.samples.apps.iosched.io.*;
-import com.google.samples.apps.iosched.io.map.model.Tile;
-import com.google.samples.apps.iosched.provider.ScheduleContract;
-import com.google.samples.apps.iosched.util.FileUtils;
-import com.google.samples.apps.iosched.util.Lists;
-import com.google.samples.apps.iosched.util.MapUtils;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import com.google.samples.apps.iosched.io.BlocksHandler;
+import com.google.samples.apps.iosched.io.ExpertsHandler;
+import com.google.samples.apps.iosched.io.HashtagsHandler;
+import com.google.samples.apps.iosched.io.JSONHandler;
+import com.google.samples.apps.iosched.io.MapPropertyHandler;
+import com.google.samples.apps.iosched.io.PartnersHandler;
+import com.google.samples.apps.iosched.io.RoomsHandler;
+import com.google.samples.apps.iosched.io.SearchSuggestHandler;
+import com.google.samples.apps.iosched.io.SessionsHandler;
+import com.google.samples.apps.iosched.io.SpeakersHandler;
+import com.google.samples.apps.iosched.io.TagsHandler;
+import com.google.samples.apps.iosched.io.VideosHandler;
+import com.google.samples.apps.iosched.io.map.model.Tile;
+import com.google.samples.apps.iosched.provider.ScheduleContract;
+import com.google.samples.apps.iosched.util.Lists;
+import com.larvalabs.svgandroid.SVGParseException;
+import com.turbomanage.httpclient.ConsoleRequestLogger;
+import com.turbomanage.httpclient.HttpResponse;
+import com.turbomanage.httpclient.RequestLogger;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-import com.larvalabs.svgandroid.SVG;
-import com.larvalabs.svgandroid.SVGBuilder;
-import com.larvalabs.svgandroid.SVGParseException;
-import com.turbomanage.httpclient.BasicHttpClient;
-import com.turbomanage.httpclient.ConsoleRequestLogger;
-import com.turbomanage.httpclient.HttpResponse;
-import com.turbomanage.httpclient.RequestLogger;
-
-import static com.google.samples.apps.iosched.util.LogUtils.*;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGE;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGW;
+import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 /**
  * Helper class that parses conference data and imports them into the app's
@@ -253,45 +261,7 @@ public class ConferenceDataHandler {
             final String url = tile.url;
 
             usedTiles.add(filename);
-
-            if (!MapUtils.hasTile(mContext, filename)) {
-                shouldClearCache = true;
-                // copy or download the tile if it is not stored yet
-                if (MapUtils.hasTileAsset(mContext, filename)) {
-                    // file already exists as an asset, copy it
-                    MapUtils.copyTileAsset(mContext, filename);
-                } else if (downloadAllowed && !TextUtils.isEmpty(url)) {
-                    try {
-                        // download the file only if downloads are allowed and url is not empty
-                        File tileFile = MapUtils.getTileFile(mContext, filename);
-                        BasicHttpClient httpClient = new BasicHttpClient();
-                        httpClient.setRequestLogger(mQuietLogger);
-                        HttpResponse httpResponse = httpClient.get(url, null);
-                        FileUtils.writeFile(httpResponse.getBody(), tileFile);
-
-                        // ensure the file is valid SVG
-                        InputStream is = new FileInputStream(tileFile);
-                        SVG svg = new SVGBuilder().readFromInputStream(is).build();
-                        is.close();
-                    } catch (IOException ex) {
-                        LOGE(TAG, "FAILED downloading map overlay tile "+url+
-                                ": " + ex.getMessage(), ex);
-                    } catch (SVGParseException ex) {
-                        LOGE(TAG, "FAILED parsing map overlay tile "+url+
-                                ": " + ex.getMessage(), ex);
-                    }
-                } else {
-                    LOGD(TAG, "Skipping download of map overlay tile" +
-                            " (since downloadsAllowed=false)");
-                }
-            }
         }
-
-        if (shouldClearCache) {
-            MapUtils.clearDiskCache(mContext);
-        }
-
-        MapUtils.removeUnusedTiles(mContext, usedTiles);
     }
 
     // Returns the timestamp of the data we have in the content provider.

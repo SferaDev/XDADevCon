@@ -16,9 +16,7 @@
 
 package com.google.samples.apps.iosched.util;
 
-import android.annotation.TargetApi;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.app.FragmentManager;

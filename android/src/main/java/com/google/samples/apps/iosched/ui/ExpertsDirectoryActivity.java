@@ -35,9 +35,7 @@ import android.widget.TextView;
 import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
-import com.google.samples.apps.iosched.ui.widget.CollectionView;
 import com.google.samples.apps.iosched.ui.widget.DrawShadowFrameLayout;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 import com.google.samples.apps.iosched.util.UIUtils;
 
 import java.util.Arrays;
@@ -74,7 +72,6 @@ public class ExpertsDirectoryActivity extends BaseActivity implements LoaderMana
 
         setContentView(R.layout.activity_experts_directory);
         getLPreviewUtils().trySetActionBar();
-        AnalyticsManager.sendScreenView(SCREEN_LABEL);
 
         mDrawShadowFrameLayout = (DrawShadowFrameLayout) findViewById(R.id.main_content);
         mFilterCountriesSpinner = (Spinner) findViewById(R.id.filter_countries);

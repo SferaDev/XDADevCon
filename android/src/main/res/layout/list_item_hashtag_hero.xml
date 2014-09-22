@@ -24,7 +24,7 @@
 
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="100dp"
         android:src="@drawable/default_cover"
         android:tint="#40000000"
         android:scaleType="centerCrop"/>
@@ -32,7 +32,7 @@
     <TextView
         android:id="@+id/name"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="100dp"
         android:text="@string/io14_hashtag"
         android:gravity="center"
         android:textSize="@dimen/hashtag_hero_text_size"

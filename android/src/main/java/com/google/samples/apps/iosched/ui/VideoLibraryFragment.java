@@ -39,7 +39,6 @@ import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
 import com.google.samples.apps.iosched.ui.widget.CollectionView;
 import com.google.samples.apps.iosched.ui.widget.CollectionViewCallbacks;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 import com.google.samples.apps.iosched.util.ImageLoader;
 import com.google.samples.apps.iosched.util.ParserUtils;
 import com.google.samples.apps.iosched.util.UIUtils;
@@ -272,14 +271,6 @@ public class VideoLibraryFragment extends Fragment
             public void onClick(View view) {
                 if (!TextUtils.isEmpty(youtubeLink)) {
                     LOGD(TAG, "Launching Youtube video: " + youtubeLink);
-                    /* [ANALYTICS:EVENT]
-                     * TRIGGER:   Click on a video on the Video Library screen.
-                     * CATEGORY:  'Video Library'
-                     * ACTION:    selectvideo
-                     * LABEL:     video's YouTube URL, http://www.youtube.com/...
-                     * [/ANALYTICS]
-                     */
-                    AnalyticsManager.sendEvent("Video Library", "selectvideo", youtubeLink, 0L);
                     Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(youtubeLink));
                     UIUtils.preferPackageForIntent(getActivity(), i,
                             UIUtils.YOUTUBE_PACKAGE_NAME);

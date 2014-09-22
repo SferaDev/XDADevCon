@@ -16,37 +16,39 @@
 
 package com.google.samples.apps.iosched.ui;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.animation.*;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.TypeEvaluator;
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.*;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.v4.widget.DrawerLayout;
 import android.text.TextUtils;
-import android.view.*;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.*;
+import android.widget.AbsListView;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 
-import com.google.android.gcm.GCMRegistrar;
-import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.samples.apps.iosched.BuildConfig;
 import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.R;
-import com.google.samples.apps.iosched.gcm.ServerUtilities;
+import com.google.samples.apps.iosched.TwitterAPI;
 import com.google.samples.apps.iosched.io.JSONHandler;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
 import com.google.samples.apps.iosched.sync.ConferenceDataHandler;
@@ -54,27 +56,31 @@ import com.google.samples.apps.iosched.sync.SyncHelper;
 import com.google.samples.apps.iosched.ui.debug.DebugActionRunnerActivity;
 import com.google.samples.apps.iosched.ui.widget.MultiSwipeRefreshLayout;
 import com.google.samples.apps.iosched.ui.widget.SwipeRefreshLayout;
-import com.google.samples.apps.iosched.util.*;
+import com.google.samples.apps.iosched.util.HelpUtils;
+import com.google.samples.apps.iosched.util.ImageLoader;
+import com.google.samples.apps.iosched.util.LPreviewUtils;
+import com.google.samples.apps.iosched.util.LPreviewUtilsBase;
+import com.google.samples.apps.iosched.util.PrefUtils;
+import com.google.samples.apps.iosched.util.UIUtils;
+import com.google.samples.apps.iosched.util.WiFiUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import static com.google.samples.apps.iosched.util.LogUtils.*;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGE;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGI;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGW;
+import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 /**
  * A base activity that handles common functionality in the app. This includes the
  * navigation drawer, login and authentication, Action Bar tweaks, amongst others.
  */
 public abstract class BaseActivity extends Activity implements
-        LoginAndAuthHelper.Callbacks,
         SharedPreferences.OnSharedPreferenceChangeListener,
         MultiSwipeRefreshLayout.CanChildScrollUpCallback {
     private static final String TAG = makeLogTag(BaseActivity.class);
-
-    // the LoginAndAuthHelper handles signing in to Google Play Services and OAuth
-    private LoginAndAuthHelper mLoginAndAuthHelper;
 
     // Navigation drawer:
     private DrawerLayout mDrawerLayout;
@@ -85,12 +91,8 @@ public abstract class BaseActivity extends Activity implements
     private LPreviewUtilsBase mLPreviewUtils;
 
     private ObjectAnimator mStatusBarColorAnimator;
-    private LinearLayout mAccountListContainer;
     private ViewGroup mDrawerItemsListContainer;
     private Handler mHandler;
-
-    private ImageView mExpandAccountBoxIndicator;
-    private boolean mAccountBoxExpanded = false;
 
     // When set, these components will be shown/hidden in sync with the action bar
     // to implement the "quick recall" effect (the Action Bar and the header views disappear
@@ -99,12 +101,11 @@ public abstract class BaseActivity extends Activity implements
 
     // Durations for certain animations we use:
     private static final int HEADER_HIDE_ANIM_DURATION = 300;
-    private static final int ACCOUNT_BOX_EXPAND_ANIM_DURATION = 200;
 
     // symbols for navdrawer items (indices must correspond to array below). This is
     // not a list of items that are necessarily *present* in the Nav Drawer; rather,
     // it's a list of all possible items.
-    protected static final int NAVDRAWER_ITEM_MY_SCHEDULE = 0;
+    protected static final int NAVDRAWER_ITEM_FULL_SCHEDULE = 0;
     protected static final int NAVDRAWER_ITEM_EXPLORE = 1;
     protected static final int NAVDRAWER_ITEM_MAP = 2;
     protected static final int NAVDRAWER_ITEM_SOCIAL = 3;
@@ -113,6 +114,21 @@ public abstract class BaseActivity extends Activity implements
     protected static final int NAVDRAWER_ITEM_SETTINGS = 6;
     protected static final int NAVDRAWER_ITEM_EXPERTS_DIRECTORY = 7;
     protected static final int NAVDRAWER_ITEM_PEOPLE_IVE_MET = 8;
+
+    //Partners
+    protected static final int NAVDRAWER_ITEM_SONY = 9;
+    protected static final int NAVDRAWER_ITEM_NVIDIA = 10;
+    protected static final int NAVDRAWER_ITEM_OPPO = 11;
+    protected static final int NAVDRAWER_ITEM_ONEPLUS = 12;
+    protected static final int NAVDRAWER_ITEM_MEDIATEK = 13;
+    protected static final int NAVDRAWER_ITEM_MOZILLA = 14;
+    protected static final int NAVDRAWER_ITEM_PEBBLE = 15;
+    protected static final int NAVDRAWER_ITEM_UBUNTU = 16;
+    protected static final int NAVDRAWER_ITEM_JOLLA = 17;
+    protected static final int NAVDRAWER_ITEM_SPUR = 18;
+
+    protected static final int NAVDRAWER_ITEM_TWITTER = 19;
+
     protected static final int NAVDRAWER_ITEM_INVALID = -1;
     protected static final int NAVDRAWER_ITEM_SEPARATOR = -2;
     protected static final int NAVDRAWER_ITEM_SEPARATOR_SPECIAL = -3;
@@ -127,7 +143,18 @@ public abstract class BaseActivity extends Activity implements
             R.string.navdrawer_item_sign_in,
             R.string.navdrawer_item_settings,
             R.string.navdrawer_item_experts_directory,
-            R.string.navdrawer_item_people_ive_met
+            R.string.navdrawer_item_people_ive_met,
+            R.string.partner_sony,
+            R.string.partner_nvidia,
+            R.string.partner_oppo,
+            R.string.partner_oneplus,
+            R.string.partner_mediatek,
+            R.string.partner_mozilla,
+            R.string.partner_pebble,
+            R.string.partner_ubuntu,
+            R.string.partner_jolla,
+            R.string.partner_spur,
+            R.string.twitter
     };
 
     // icons for navdrawer items (indices must correspond to above array)
@@ -141,6 +168,17 @@ public abstract class BaseActivity extends Activity implements
             R.drawable.ic_drawer_settings,
             R.drawable.ic_drawer_experts,
             R.drawable.ic_drawer_people_met,
+            R.drawable.ic_action_sony,
+            R.drawable.ic_action_nvidia,
+            R.drawable.ic_action_oppo,
+            R.drawable.ic_action_oneplus,
+            R.drawable.ic_action_mediatek,
+            R.drawable.ic_action_mozilla,
+            R.drawable.ic_action_pebble,
+            R.drawable.ic_action_ubuntu,
+            R.drawable.ic_action_jolla,
+            R.drawable.ic_action_spur,
+            R.drawable.ic_action_twitter
     };
 
     // delay to launch nav drawer item, to allow close animation to play
@@ -160,9 +198,6 @@ public abstract class BaseActivity extends Activity implements
     // SwipeRefreshLayout allows the user to swipe the screen down to trigger a manual refresh
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    // asynctask that performs GCM registration in the backgorund
-    private AsyncTask<Void, Void, Void> mGCMRegisterTask;
-
     // handle to our sync observer (that notifies us about changes in our sync state)
     private Object mSyncObserverHandle;
 
@@ -180,8 +215,6 @@ public abstract class BaseActivity extends Activity implements
     // A Runnable that we should execute when the navigation drawer finishes its closing animation
     private Runnable mDeferredOnDrawerClosedRunnable;
 
-    private boolean mManualSyncRequest;
-
     private int mThemedStatusBarColor;
     private int mProgressBarTopWhenActionBarShown;
     private static final TypeEvaluator ARGB_EVALUATOR = new ArgbEvaluator();
@@ -190,8 +223,6 @@ public abstract class BaseActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        AnalyticsManager.initializeAnalyticsTracker(getApplicationContext());
-
         PrefUtils.init(this);
 
         // Check if the EULA has been accepted; if not, show it.
@@ -210,12 +241,7 @@ public abstract class BaseActivity extends Activity implements
         // Intent in the app.
         UIUtils.enableDisableActivitiesByFormFactor(this);
 
-        if (savedInstanceState == null) {
-            registerGCMClient();
-        }
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.registerOnSharedPreferenceChangeListener(this);
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
 
         ActionBar ab = getActionBar();
         if (ab != null) {
@@ -237,7 +263,7 @@ public abstract class BaseActivity extends Activity implements
             mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
                 public void onRefresh() {
-                    requestDataRefresh();
+                    //TODO Refresh
                 }
             });
 
@@ -305,10 +331,6 @@ public abstract class BaseActivity extends Activity implements
                     mDeferredOnDrawerClosedRunnable.run();
                     mDeferredOnDrawerClosedRunnable = null;
                 }
-                if (mAccountBoxExpanded) {
-                    mAccountBoxExpanded = false;
-                    setupAccountBoxToggle();
-                }
                 invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
                 updateStatusBarForNavDrawerSlide(0f);
                 onNavDrawerStateChanged(false, false);
@@ -370,43 +392,41 @@ public abstract class BaseActivity extends Activity implements
         boolean attendeeAtVenue = PrefUtils.isAttendeeAtVenue(this);
         mNavDrawerItems.clear();
 
-        // decide which items will appear in the nav drawer
-        if (AccountUtils.hasActiveAccount(this)) {
-            // Only logged-in users can save sessions, so if there is no active account,
-            // there is no My Schedule
-            mNavDrawerItems.add(NAVDRAWER_ITEM_MY_SCHEDULE);
-        } else {
-            // If no active account, show Sign In
-            mNavDrawerItems.add(NAVDRAWER_ITEM_SIGN_IN);
-        }
-
-        // Explore is always shown
+        mNavDrawerItems.add(NAVDRAWER_ITEM_FULL_SCHEDULE);
         mNavDrawerItems.add(NAVDRAWER_ITEM_EXPLORE);
 
-        // If the attendee is on-site, show Map on the nav drawer
-        if (attendeeAtVenue) {
-            mNavDrawerItems.add(NAVDRAWER_ITEM_MAP);
-        }
         mNavDrawerItems.add(NAVDRAWER_ITEM_SEPARATOR);
+
+        mNavDrawerItems.add(NAVDRAWER_ITEM_MAP);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_SOCIAL);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_TWITTER);
+
+        mNavDrawerItems.add(NAVDRAWER_ITEM_SEPARATOR_SPECIAL);
+
+        mNavDrawerItems.add(NAVDRAWER_ITEM_SONY);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_NVIDIA);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_OPPO);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_ONEPLUS);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_MEDIATEK);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_MOZILLA);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_PEBBLE);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_UBUNTU);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_JOLLA);
+        mNavDrawerItems.add(NAVDRAWER_ITEM_SPUR);
 
         // If attendee is on-site, show the People I've Met item
         if (BuildConfig.SUPPORTS_PEER_BADGE_SCANNING && attendeeAtVenue) {
             mNavDrawerItems.add(NAVDRAWER_ITEM_PEOPLE_IVE_MET);
         }
 
-        // If the experts directory hasn't expired, show it
-        if (!Config.hasExpertsDirectoryExpired()) {
-            mNavDrawerItems.add(NAVDRAWER_ITEM_EXPERTS_DIRECTORY);
-        }
+        //mNavDrawerItems.add(NAVDRAWER_ITEM_EXPERTS_DIRECTORY);
+        //mNavDrawerItems.add(NAVDRAWER_ITEM_SETTINGS);
 
         // Other items that are always in the nav drawer irrespective of whether the
         // attendee is on-site or remote:
-        mNavDrawerItems.add(NAVDRAWER_ITEM_SOCIAL);
         if(BuildConfig.HAS_VIDEO_LIBRARY) {
             mNavDrawerItems.add(NAVDRAWER_ITEM_VIDEO_LIBRARY);
         }
-        mNavDrawerItems.add(NAVDRAWER_ITEM_SEPARATOR_SPECIAL);
-        mNavDrawerItems.add(NAVDRAWER_ITEM_SETTINGS);
 
         createNavDrawerItems();
     }
@@ -455,7 +475,6 @@ public abstract class BaseActivity extends Activity implements
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         setupNavDrawer();
-        setupAccountBox();
 
         trySetupSwipeRefresh();
         updateSwipeRefreshProgressBarTop();
@@ -467,192 +486,6 @@ public abstract class BaseActivity extends Activity implements
         } else {
             LOGW(TAG, "No view with ID main_content to fade in.");
         }
-    }
-
-    /**
-     * Sets up the account box. The account box is the area at the top of the nav drawer that
-     * shows which account the user is logged in as, and lets them switch accounts. It also
-     * shows the user's Google+ cover photo as background.
-     */
-    private void setupAccountBox() {
-        mAccountListContainer = (LinearLayout) findViewById(R.id.account_list);
-
-        if (mAccountListContainer == null) {
-            //This activity does not have an account box
-            return;
-        }
-
-        final View chosenAccountView = findViewById(R.id.chosen_account_view);
-        Account chosenAccount = AccountUtils.getActiveAccount(this);
-        if (chosenAccount == null) {
-            // No account logged in; hide account box
-            chosenAccountView.setVisibility(View.GONE);
-            mAccountListContainer.setVisibility(View.GONE);
-            return;
-        } else {
-            chosenAccountView.setVisibility(View.VISIBLE);
-            mAccountListContainer.setVisibility(View.INVISIBLE);
-        }
-
-        AccountManager am = AccountManager.get(this);
-        Account[] accountArray = am.getAccountsByType(GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE);
-        List<Account> accounts = new ArrayList<Account>(Arrays.asList(accountArray));
-        accounts.remove(chosenAccount);
-
-        ImageView coverImageView = (ImageView) chosenAccountView.findViewById(R.id.profile_cover_image);
-        ImageView profileImageView = (ImageView) chosenAccountView.findViewById(R.id.profile_image);
-        TextView nameTextView = (TextView) chosenAccountView.findViewById(R.id.profile_name_text);
-        TextView email = (TextView) chosenAccountView.findViewById(R.id.profile_email_text);
-        mExpandAccountBoxIndicator = (ImageView) findViewById(R.id.expand_account_box_indicator);
-
-        String name = AccountUtils.getPlusName(this);
-        if (name == null) {
-            nameTextView.setVisibility(View.GONE);
-        } else {
-            nameTextView.setText(name);
-        }
-
-        String imageUrl = AccountUtils.getPlusImageUrl(this);
-        if (imageUrl != null) {
-            mImageLoader.loadImage(imageUrl, profileImageView);
-        }
-
-        String coverImageUrl = AccountUtils.getPlusCoverUrl(this);
-        if (coverImageUrl != null) {
-            mImageLoader.loadImage(coverImageUrl, coverImageView);
-        } else {
-            coverImageView.setImageResource(R.drawable.default_cover);
-        }
-
-        email.setText(chosenAccount.name);
-
-        if (accounts.isEmpty()) {
-            // There's only one account on the device, so no need for a switcher.
-            mExpandAccountBoxIndicator.setVisibility(View.GONE);
-            mAccountListContainer.setVisibility(View.GONE);
-            chosenAccountView.setEnabled(false);
-            return;
-        }
-
-        chosenAccountView.setEnabled(true);
-
-        mExpandAccountBoxIndicator.setVisibility(View.VISIBLE);
-        chosenAccountView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mAccountBoxExpanded = !mAccountBoxExpanded;
-                setupAccountBoxToggle();
-            }
-        });
-        setupAccountBoxToggle();
-
-        populateAccountList(accounts);
-    }
-
-    private void populateAccountList(List<Account> accounts) {
-        mAccountListContainer.removeAllViews();
-
-        LayoutInflater layoutInflater = LayoutInflater.from(this);
-        for (Account account : accounts) {
-            View itemView = layoutInflater.inflate(R.layout.list_item_account,
-                    mAccountListContainer, false);
-            ((TextView) itemView.findViewById(R.id.profile_email_text))
-                    .setText(account.name);
-            final String accountName = account.name;
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    ConnectivityManager cm = (ConnectivityManager)
-                            getSystemService(CONNECTIVITY_SERVICE);
-                    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-                    if (activeNetwork == null || !activeNetwork.isConnected()) {
-                        // if there's no network, don't try to change the selected account
-                        Toast.makeText(BaseActivity.this, R.string.no_connection_cant_login,
-                                Toast.LENGTH_SHORT).show();
-                        mDrawerLayout.closeDrawer(Gravity.START);
-                        return;
-                    } else {
-                        LOGD(TAG, "User requested switch to account: " + accountName);
-                        AccountUtils.setActiveAccount(BaseActivity.this, accountName);
-                        onAccountChangeRequested();
-                        startLoginProcess();
-                        mAccountBoxExpanded = false;
-                        setupAccountBoxToggle();
-                        mDrawerLayout.closeDrawer(Gravity.START);
-                        setupAccountBox();
-                    }
-                }
-            });
-            mAccountListContainer.addView(itemView);
-        }
-    }
-
-    protected void onAccountChangeRequested() {
-        // override if you want to be notified when another account has been selected account has changed
-    }
-
-    private void setupAccountBoxToggle() {
-        int selfItem = getSelfNavDrawerItem();
-        if (mDrawerLayout == null || selfItem == NAVDRAWER_ITEM_INVALID) {
-            // this Activity does not have a nav drawer
-            return;
-        }
-        mExpandAccountBoxIndicator.setImageResource(mAccountBoxExpanded
-                ? R.drawable.ic_drawer_accounts_collapse
-                : R.drawable.ic_drawer_accounts_expand);
-        int hideTranslateY = -mAccountListContainer.getHeight() / 4; // last 25% of animation
-        if (mAccountBoxExpanded && mAccountListContainer.getTranslationY() == 0) {
-            // initial setup
-            mAccountListContainer.setAlpha(0);
-            mAccountListContainer.setTranslationY(hideTranslateY);
-        }
-
-        AnimatorSet set = new AnimatorSet();
-        set.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mDrawerItemsListContainer.setVisibility(mAccountBoxExpanded
-                        ? View.INVISIBLE : View.VISIBLE);
-                mAccountListContainer.setVisibility(mAccountBoxExpanded
-                        ? View.VISIBLE : View.INVISIBLE);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                onAnimationEnd(animation);
-            }
-        });
-
-        if (mAccountBoxExpanded) {
-            mAccountListContainer.setVisibility(View.VISIBLE);
-            AnimatorSet subSet = new AnimatorSet();
-            subSet.playTogether(
-                    ObjectAnimator.ofFloat(mAccountListContainer, View.ALPHA, 1)
-                            .setDuration(ACCOUNT_BOX_EXPAND_ANIM_DURATION),
-                    ObjectAnimator.ofFloat(mAccountListContainer, View.TRANSLATION_Y, 0)
-                            .setDuration(ACCOUNT_BOX_EXPAND_ANIM_DURATION));
-            set.playSequentially(
-                    ObjectAnimator.ofFloat(mDrawerItemsListContainer, View.ALPHA, 0)
-                            .setDuration(ACCOUNT_BOX_EXPAND_ANIM_DURATION),
-                    subSet);
-            set.start();
-        } else {
-            mDrawerItemsListContainer.setVisibility(View.VISIBLE);
-            AnimatorSet subSet = new AnimatorSet();
-            subSet.playTogether(
-                    ObjectAnimator.ofFloat(mAccountListContainer, View.ALPHA, 0)
-                            .setDuration(ACCOUNT_BOX_EXPAND_ANIM_DURATION),
-                    ObjectAnimator.ofFloat(mAccountListContainer, View.TRANSLATION_Y,
-                            hideTranslateY)
-                            .setDuration(ACCOUNT_BOX_EXPAND_ANIM_DURATION));
-            set.playSequentially(
-                    subSet,
-                    ObjectAnimator.ofFloat(mDrawerItemsListContainer, View.ALPHA, 1)
-                            .setDuration(ACCOUNT_BOX_EXPAND_ANIM_DURATION));
-            set.start();
-        }
-
-        set.start();
     }
 
     @Override
@@ -695,7 +528,7 @@ public abstract class BaseActivity extends Activity implements
                 return true;
 
             case R.id.menu_refresh:
-                requestDataRefresh();
+                //TODO
                 break;
 
             case R.id.menu_io_extended:
@@ -704,8 +537,12 @@ public abstract class BaseActivity extends Activity implements
                 break;
 
             case R.id.menu_map:
-                startActivity(new Intent(this, UIUtils.getMapActivityClass(this)));
-                finish();
+                Uri locationUri = constructExternalMappingAppUri();
+                Intent intent = new Intent(Intent.ACTION_VIEW, locationUri);
+                if(intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                    finish();
+                }
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -730,23 +567,11 @@ public abstract class BaseActivity extends Activity implements
         }
     }
 
-    protected void requestDataRefresh() {
-        Account activeAccount = AccountUtils.getActiveAccount(this);
-        ContentResolver contentResolver = getContentResolver();
-        if (contentResolver.isSyncActive(activeAccount, ScheduleContract.CONTENT_AUTHORITY)) {
-            LOGD(TAG, "Ignoring manual sync request because a sync is already in progress.");
-            return;
-        }
-        mManualSyncRequest = true;
-        LOGD(TAG, "Requesting manual data refresh.");
-        SyncHelper.requestManualSync(activeAccount);
-    }
-
     private void goToNavDrawerItem(int item) {
         Intent intent;
         switch (item) {
-            case NAVDRAWER_ITEM_MY_SCHEDULE:
-                intent = new Intent(this, MyScheduleActivity.class);
+            case NAVDRAWER_ITEM_FULL_SCHEDULE:
+                intent = new Intent(this, AllScheduleActivity.class);
                 startActivity(intent);
                 finish();
                 break;
@@ -756,18 +581,12 @@ public abstract class BaseActivity extends Activity implements
                 finish();
                 break;
             case NAVDRAWER_ITEM_MAP:
-                if(BuildConfig.USE_EXTERNAL_MAPS) {
-                    Uri locationUri = constructExternalMappingAppUri();
-                    intent = new Intent(Intent.ACTION_VIEW, locationUri);
-                    if(intent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(intent);
-                        break;
-                    }
+                Uri locationUri = constructExternalMappingAppUri();
+                intent = new Intent(Intent.ACTION_VIEW, locationUri);
+                if(intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                    finish();
                 }
-
-                intent = new Intent(this, UIUtils.getMapActivityClass(this));
-                startActivity(intent);
-                finish();
                 break;
             case NAVDRAWER_ITEM_SOCIAL:
                 intent = new Intent(this, SocialActivity.class);
@@ -780,12 +599,10 @@ public abstract class BaseActivity extends Activity implements
                 finish();
                 break;
             case NAVDRAWER_ITEM_PEOPLE_IVE_MET:
-                intent = new Intent(this, PeopleIveMetActivity.class);
-                startActivity(intent);
-                finish();
+                //DEPRECATED
                 break;
             case NAVDRAWER_ITEM_SIGN_IN:
-                signInOrCreateAnAccount();
+                //DEPRECATED
                 break;
             case NAVDRAWER_ITEM_SETTINGS:
                 intent = new Intent(this, SettingsActivity.class);
@@ -796,6 +613,49 @@ public abstract class BaseActivity extends Activity implements
                 startActivity(intent);
                 finish();
                 break;
+            case NAVDRAWER_ITEM_TWITTER:
+                TwitterAPI.createTweetDialog(this, "XDADevConQA");
+                break;
+            case NAVDRAWER_ITEM_SONY:
+                openURL("http://www.sonymobile.com/us/");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_NVIDIA:
+                openURL("http://www.nvidia.com/content/global/global.php");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_OPPO:
+                openURL("http://global.oppo.com/");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_ONEPLUS:
+                openURL("http://oneplus.net");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_MEDIATEK:
+                openURL("http://www.mediatek.com/");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_MOZILLA:
+                openURL("http://www.mozilla.org/");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_PEBBLE:
+                openURL("https://getpebble.com/");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_UBUNTU:
+                openURL("http://www.ubuntu.com/");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_JOLLA:
+                openURL("http://jolla.com/");
+                finish();
+                break;
+            case NAVDRAWER_ITEM_SPUR:
+                openURL("http://epitomical.com/");
+                finish();
+                break;
         }
     }
 
@@ -804,22 +664,6 @@ public abstract class BaseActivity extends Activity implements
                 + BuildConfig.VENUE_LATITUDE + "," + BuildConfig.VENUE_LONGITUDE
                 + "("+BuildConfig.CONFERENCE_NAME+")";
         return Uri.parse(uri);
-    }
-
-    private void signInOrCreateAnAccount() {
-        //Get list of accounts on device.
-        AccountManager am = AccountManager.get(BaseActivity.this);
-        Account[] accountArray = am.getAccountsByType(GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE);
-        if (accountArray.length == 0) {
-            //Send the user to the "Add Account" page.
-            Intent intent = new Intent(Settings.ACTION_ADD_ACCOUNT);
-            intent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[] {"com.google"});
-            startActivity(intent);
-        } else {
-            //Try to log the user in with the first account on the device.
-            startLoginProcess();
-            mDrawerLayout.closeDrawer(Gravity.START);
-        }
     }
 
     private void onNavDrawerItemClicked(final int itemId) {
@@ -883,15 +727,6 @@ public abstract class BaseActivity extends Activity implements
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Verifies the proper version of Google Play Services exists on the device.
-        PlayServicesUtils.checkGooglePlaySevices(this);
-
-        // Watch for sync state changes
-        mSyncStatusObserver.onStatusChanged(0);
-        final int mask = ContentResolver.SYNC_OBSERVER_TYPE_PENDING |
-                ContentResolver.SYNC_OBSERVER_TYPE_ACTIVE;
-        mSyncObserverHandle = ContentResolver.addStatusChangeListener(mask, mSyncStatusObserver);
     }
 
     @Override
@@ -954,8 +789,6 @@ public abstract class BaseActivity extends Activity implements
             LOGD(TAG, "One-time data bootstrap not done yet. Doing now.");
             performDataBootstrap();
         }
-
-        startLoginProcess();
     }
 
     /**
@@ -995,173 +828,15 @@ public abstract class BaseActivity extends Activity implements
                 }
 
                 mDataBootstrapThread = null;
-
-                // Request a manual sync immediately after the bootstrapping process, in case we
-                // have an active connection. Otherwise, the scheduled sync could take a while.
-                SyncHelper.requestManualSync(AccountUtils.getActiveAccount(appContext));
             }
         });
         mDataBootstrapThread.start();
-    }
-
-    /**
-     * Returns the default account on the device. We use the rule that the first account
-     * should be the default. It's arbitrary, but the alternative would be showing an account
-     * chooser popup which wouldn't be a smooth first experience with the app. Since the user
-     * can easily switch the account with the nav drawer, we opted for this implementation.
-     */
-    private String getDefaultAccount() {
-        // Choose first account on device.
-        LOGD(TAG, "Choosing default account (first account on device)");
-        AccountManager am = AccountManager.get(this);
-        Account[] accounts = am.getAccountsByType(GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE);
-        if (accounts.length == 0) {
-            // No Google accounts on device.
-            LOGW(TAG, "No Google accounts on device; not setting default account.");
-            return null;
-        }
-
-        LOGD(TAG, "Default account is: " + accounts[0].name);
-        return accounts[0].name;
-    }
-
-
-    private void complainMustHaveGoogleAccount() {
-        LOGD(TAG, "Complaining about missing Google account.");
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.google_account_required_title)
-                .setMessage(R.string.google_account_required_message)
-                .setPositiveButton(R.string.add_account, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        promptAddAccount();
-                    }
-                })
-                .setNegativeButton(R.string.not_now, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
-                .show();
-    }
-
-    private void promptAddAccount() {
-        Intent intent = new Intent(Settings.ACTION_ADD_ACCOUNT);
-        intent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[]{"com.google"});
-        startActivity(intent);
-        finish();
-    }
-
-    private void startLoginProcess() {
-        LOGD(TAG, "Starting login process.");
-        if (!AccountUtils.hasActiveAccount(this)) {
-            LOGD(TAG, "No active account, attempting to pick a default.");
-            String defaultAccount = getDefaultAccount();
-            if (defaultAccount == null) {
-                LOGE(TAG, "Failed to pick default account (no accounts). Failing.");
-                complainMustHaveGoogleAccount();
-                return;
-            }
-            LOGD(TAG, "Default to: " + defaultAccount);
-            AccountUtils.setActiveAccount(this, defaultAccount);
-        }
-
-        if (!AccountUtils.hasActiveAccount(this)) {
-            LOGD(TAG, "Can't proceed with login -- no account chosen.");
-            return;
-        } else {
-            LOGD(TAG, "Chosen account: " + AccountUtils.getActiveAccountName(this));
-        }
-
-        String accountName = AccountUtils.getActiveAccountName(this);
-        LOGD(TAG, "Chosen account: " + AccountUtils.getActiveAccountName(this));
-
-        if (mLoginAndAuthHelper != null && mLoginAndAuthHelper.getAccountName().equals(accountName)) {
-            LOGD(TAG, "Helper already set up; simply starting it.");
-            mLoginAndAuthHelper.start();
-            return;
-        }
-
-        LOGD(TAG, "Starting login process with account " + accountName);
-
-        if (mLoginAndAuthHelper != null) {
-            LOGD(TAG, "Tearing down old Helper, was " + mLoginAndAuthHelper.getAccountName());
-            if (mLoginAndAuthHelper.isStarted()) {
-                LOGD(TAG, "Stopping old Helper");
-                mLoginAndAuthHelper.stop();
-            }
-            mLoginAndAuthHelper = null;
-        }
-
-        LOGD(TAG, "Creating and starting new Helper with account: " + accountName);
-        mLoginAndAuthHelper = new LoginAndAuthHelper(this, this, accountName);
-        mLoginAndAuthHelper.start();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (mLoginAndAuthHelper == null || !mLoginAndAuthHelper.onActivityResult(requestCode,
-                resultCode, data)) {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
     }
 
     @Override
     public void onStop() {
         LOGD(TAG, "onStop");
         super.onStop();
-        if (mLoginAndAuthHelper != null) {
-            mLoginAndAuthHelper.stop();
-        }
-    }
-
-    @Override
-    public void onPlusInfoLoaded(String accountName) {
-        setupAccountBox();
-        populateNavDrawer();
-    }
-
-    /**
-     * Called when authentication succeeds. This may either happen because the user just
-     * authenticated for the first time (and went through the sign in flow), or because it's
-     * a returning user.
-     * @param accountName name of the account that just authenticated successfully.
-     * @param newlyAuthenticated If true, this user just authenticated for the first time.
-     * If false, it's a returning user.
-     */
-    @Override
-    public void onAuthSuccess(String accountName, boolean newlyAuthenticated) {
-        Account account = new Account(accountName, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE);
-        LOGD(TAG, "onAuthSuccess, account " + accountName + ", newlyAuthenticated=" + newlyAuthenticated);
-
-        refreshAccountDependantData();
-
-        if (newlyAuthenticated) {
-            LOGD(TAG, "Enabling auto sync on content provider for account " + accountName);
-            SyncHelper.updateSyncInterval(this, account);
-            SyncHelper.requestManualSync(account);
-        }
-
-        setupAccountBox();
-        populateNavDrawer();
-        registerGCMClient();
-    }
-
-    @Override
-    public void onAuthFailure(String accountName) {
-        LOGD(TAG, "Auth failed for account " + accountName);
-        refreshAccountDependantData();
-    }
-
-    protected void refreshAccountDependantData() {
-        // Force local data refresh for data that depends on the logged user:
-        LOGD(TAG, "Refreshing MySchedule data");
-        getContentResolver().notifyChange(ScheduleContract.MySchedule.CONTENT_URI, null, false);
-    }
-
-    protected void retryAuth() {
-        mLoginAndAuthHelper.retryAuthByUserRequest();
     }
 
     /**
@@ -1304,108 +979,13 @@ public abstract class BaseActivity extends Activity implements
                 getResources().getColor(R.color.navdrawer_icon_tint));
     }
 
-    /** Registers device on the GCM server, if necessary. */
-    private void registerGCMClient() {
-        GCMRegistrar.checkDevice(this);
-        GCMRegistrar.checkManifest(this);
-
-        final String regId = GCMRegistrar.getRegistrationId(this);
-
-        if (TextUtils.isEmpty(regId)) {
-            // Automatically registers application on startup.
-            GCMRegistrar.register(this, Config.GCM_SENDER_ID);
-
-        } else {
-            // Get the correct GCM key for the user. GCM key is a somewhat non-standard
-            // approach we use in this app. For more about this, check GCM.TXT.
-            final String gcmKey = AccountUtils.hasActiveAccount(this) ?
-                    AccountUtils.getGcmKey(this, AccountUtils.getActiveAccountName(this)) : null;
-            // Device is already registered on GCM, needs to check if it is
-            // registered on our server as well.
-            if (ServerUtilities.isRegisteredOnServer(this, gcmKey)) {
-                // Skips registration.
-                LOGI(TAG, "Already registered on the GCM server with right GCM key.");
-            } else {
-                // Try to register again, but not in the UI thread.
-                // It's also necessary to cancel the thread onDestroy(),
-                // hence the use of AsyncTask instead of a raw thread.
-                mGCMRegisterTask = new AsyncTask<Void, Void, Void>() {
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        LOGI(TAG, "Registering on the GCM server with GCM key: "
-                                + AccountUtils.sanitizeGcmKey(gcmKey));
-                        boolean registered = ServerUtilities.register(BaseActivity.this,
-                                regId, gcmKey);
-                        // At this point all attempts to register with the app
-                        // server failed, so we need to unregister the device
-                        // from GCM - the app will try to register again when
-                        // it is restarted. Note that GCM will send an
-                        // unregistered callback upon completion, but
-                        // GCMIntentService.onUnregistered() will ignore it.
-                        if (!registered) {
-                            LOGI(TAG, "GCM registration failed.");
-                            GCMRegistrar.unregister(BaseActivity.this);
-                        } else {
-                            LOGI(TAG, "GCM registration successful.");
-                        }
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(Void result) {
-                        mGCMRegisterTask = null;
-                    }
-                };
-                mGCMRegisterTask.execute(null, null, null);
-            }
-        }
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        if (mGCMRegisterTask != null) {
-            LOGD(TAG, "Cancelling GCM registration task.");
-            mGCMRegisterTask.cancel(true);
-        }
-
-        try {
-            GCMRegistrar.onDestroy(this);
-        } catch (Exception e) {
-            LOGW(TAG, "C2DM unregistration error", e);
-        }
-
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         sp.unregisterOnSharedPreferenceChangeListener(this);
     }
-
-    private SyncStatusObserver mSyncStatusObserver = new SyncStatusObserver() {
-        @Override
-        public void onStatusChanged(int which) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    String accountName = AccountUtils.getActiveAccountName(BaseActivity.this);
-                    if (TextUtils.isEmpty(accountName)) {
-                        onRefreshingStateChanged(false);
-                        mManualSyncRequest = false;
-                        return;
-                    }
-
-                    Account account = new Account(accountName, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE);
-                    boolean syncActive = ContentResolver.isSyncActive(
-                            account, ScheduleContract.CONTENT_AUTHORITY);
-                    boolean syncPending = ContentResolver.isSyncPending(
-                            account, ScheduleContract.CONTENT_AUTHORITY);
-                    if (!syncActive && !syncPending) {
-                        mManualSyncRequest = false;
-                    }
-                    onRefreshingStateChanged(syncActive || (mManualSyncRequest && syncPending));
-                }
-            });
-        }
-    };
 
     protected void onRefreshingStateChanged(boolean refreshing) {
         if (mSwipeRefreshLayout != null) {
@@ -1480,5 +1060,11 @@ public abstract class BaseActivity extends Activity implements
     @Override
     public boolean canSwipeRefreshChildScrollUp() {
         return false;
+    }
+
+    public void openURL(String url) {
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
     }
 }

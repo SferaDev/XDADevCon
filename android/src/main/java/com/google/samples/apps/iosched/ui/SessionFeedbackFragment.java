@@ -18,7 +18,6 @@ package com.google.samples.apps.iosched.ui;
 
 import android.app.Fragment;
 import android.app.LoaderManager;
-import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
@@ -30,29 +29,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.RatingBar;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient;
-import com.google.android.gms.plus.PlusClient;
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
 import com.google.samples.apps.iosched.ui.widget.NumberRatingBar;
 import com.google.samples.apps.iosched.util.AccountUtils;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 import com.google.samples.apps.iosched.util.FeedbackUtils;
 
-import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
 import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 /**
  * A fragment that lets the user submit feedback about a given session.
  */
 public class SessionFeedbackFragment extends Fragment implements
-        LoaderManager.LoaderCallbacks<Cursor>,
-        GooglePlayServicesClient.ConnectionCallbacks,
-        GooglePlayServicesClient.OnConnectionFailedListener {
+        LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = makeLogTag(SessionDetailFragment.class);
 
@@ -66,7 +57,6 @@ public class SessionFeedbackFragment extends Fragment implements
     private String mTitleString;
 
     private TextView mTitle;
-    private PlusClient mPlusClient;
 
     private boolean mVariableHeightHeader = false;
     private RatingBar mSessionRatingFeedbackBar;
@@ -83,10 +73,6 @@ public class SessionFeedbackFragment extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final String chosenAccountName = AccountUtils.getActiveAccountName(getActivity());
-        mPlusClient = new PlusClient.Builder(getActivity(), this, this)
-                .clearScopes()
-                .setAccountName(chosenAccountName)
-                .build();
 
         final Intent intent = BaseActivity.fragmentArgumentsToIntent(getArguments());
         mSessionUri = intent.getData();
@@ -131,45 +117,11 @@ public class SessionFeedbackFragment extends Fragment implements
                     @Override
                     public void onClick(View view) {
                         submitAllFeedback();
-                        /* [ANALYTICS:EVENT]
-                         * TRIGGER:   Send feedback about a session.
-                         * CATEGORY:  'Session'
-                         * ACTION:    'Feedback'
-                         * LABEL:     session title/subtitle. Specific feedback IS NOT included.
-                         * [/ANALYTICS]
-                         */
-                        AnalyticsManager.sendEvent("Session", "Feedback", mTitleString, 0L);
                         getActivity().finish();
                     }
                 }
         );
         return rootView;
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        mPlusClient.connect();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        mPlusClient.disconnect();
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-    }
-
-    @Override
-    public void onDisconnected() {
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        // Don't show an error just for the +1 button. Google Play services errors
-        // should be caught at a higher level in the app
     }
 
     /**
@@ -184,14 +136,6 @@ public class SessionFeedbackFragment extends Fragment implements
 
         // Format time block this session occupies
         mTitle.setText(mTitleString);
-
-        /* [ANALYTICS:SCREEN]
-         * TRIGGER:   View the Send Session Feedback screen.
-         * LABEL:     'Feedback' + session title/subtitle
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendScreenView("Feedback: " + mTitleString);
-        LOGD("Tracker", "Feedback: " + mTitleString);
     }
 
     /* ALL THE FEEDBACKS */

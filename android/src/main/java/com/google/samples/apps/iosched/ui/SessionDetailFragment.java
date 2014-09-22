@@ -18,7 +18,11 @@ package com.google.samples.apps.iosched.ui;
 
 import android.app.Fragment;
 import android.app.LoaderManager;
-import android.content.*;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.CursorLoader;
+import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Paint;
 import android.graphics.drawable.ShapeDrawable;
@@ -29,14 +33,21 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Pair;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.plus.PlusOneButton;
+import com.bumptech.glide.request.bitmap.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.android.youtube.player.YouTubeIntents;
 import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.R;
@@ -47,15 +58,17 @@ import com.google.samples.apps.iosched.service.SessionCalendarService;
 import com.google.samples.apps.iosched.ui.widget.CheckableFrameLayout;
 import com.google.samples.apps.iosched.ui.widget.MessageCardView;
 import com.google.samples.apps.iosched.ui.widget.ObservableScrollView;
-import com.google.samples.apps.iosched.util.*;
+import com.google.samples.apps.iosched.util.AccountUtils;
+import com.google.samples.apps.iosched.util.ImageLoader;
+import com.google.samples.apps.iosched.util.LPreviewUtilsBase;
+import com.google.samples.apps.iosched.util.SessionsHelper;
+import com.google.samples.apps.iosched.util.TimeUtils;
+import com.google.samples.apps.iosched.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-
-import com.bumptech.glide.request.bitmap.RequestListener;
-import com.bumptech.glide.request.target.Target;
 
 import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
 import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
@@ -111,7 +124,6 @@ public class SessionDetailFragment extends Fragment implements
     private View mScrollViewChild;
     private TextView mTitle;
     private TextView mSubtitle;
-    private PlusOneButton mPlusOneButton;
 
     private ObservableScrollView mScrollView;
     private CheckableFrameLayout mAddScheduleButton;
@@ -208,7 +220,6 @@ public class SessionDetailFragment extends Fragment implements
         mPhotoViewContainer = mRootView.findViewById(R.id.session_photo_container);
         mPhotoView = (ImageView) mRootView.findViewById(R.id.session_photo);
 
-        mPlusOneButton = (PlusOneButton) mRootView.findViewById(R.id.plus_one_button);
         mAbstract = (TextView) mRootView.findViewById(R.id.session_abstract);
         mRequirements = (TextView) mRootView.findViewById(R.id.session_requirements);
         mTags = (LinearLayout) mRootView.findViewById(R.id.session_tags);
@@ -228,16 +239,6 @@ public class SessionDetailFragment extends Fragment implements
                             getString(R.string.session_details_a11y_session_added) :
                             getString(R.string.session_details_a11y_session_removed));
                 }
-
-                /* [ANALYTICS:EVENT]
-                 * TRIGGER:   Add or remove a session from My Schedule.
-                 * CATEGORY:  'Session'
-                 * ACTION:    'Starred' or 'Unstarred'
-                 * LABEL:     Session title/subtitle.
-                 * [/ANALYTICS]
-                 */
-                AnalyticsManager.sendEvent(
-                        "Session", starred ? "Starred" : "Unstarred", mTitleString, 0L);
             }
         });
 
@@ -898,16 +899,7 @@ public class SessionDetailFragment extends Fragment implements
     }
 
     private void updatePlusOneButton() {
-        if (mPlusOneButton == null) {
-            return;
-        }
-
-        if (!TextUtils.isEmpty(mUrl) && !mIsKeynote) {
-            mPlusOneButton.initialize(mUrl, 0);
-            mPlusOneButton.setVisibility(View.VISIBLE);
-        } else {
-            mPlusOneButton.setVisibility(View.GONE);
-        }
+        //DEPRECATED
     }
 
     private void showWatchNowCard() {
@@ -936,14 +928,6 @@ public class SessionDetailFragment extends Fragment implements
             @Override
             public void onMessageCardButtonClicked(String tag) {
                 if ("GIVE_FEEDBACK".equals(tag)) {
-                    /* [ANALYTICS:EVENT]
-                     * TRIGGER:   Click on the Send Feedback action on the Session Details page.
-                     * CATEGORY:  'Session'
-                     * ACTION:    'Feedback'
-                     * LABEL:     session title/subtitle
-                     * [/ANALYTICS]
-                     */
-                    AnalyticsManager.sendEvent("Session", "Feedback", mTitleString, 0L);
                     Intent intent = getFeedbackIntent();
                     startActivity(intent);
                 } else {
@@ -1104,15 +1088,7 @@ public class SessionDetailFragment extends Fragment implements
         SessionsHelper helper = new SessionsHelper(getActivity());
         switch (item.getItemId()) {
             case R.id.menu_map_room:
-                /* [ANALYTICS:EVENT]
-                 * TRIGGER:   Click on the Map action on the Session Details page.
-                 * CATEGORY:  'Session'
-                 * ACTION:    'Map'
-                 * LABEL:     session title/subtitle
-                 * [/ANALYTICS]
-                 */
-                AnalyticsManager.sendEvent("Session", "Map", mTitleString, 0L);
-                helper.startMapActivity(mRoomId);
+                //DEPRECATED
                 return true;
 
             case R.id.menu_share:
@@ -1124,14 +1100,6 @@ public class SessionDetailFragment extends Fragment implements
 
             case R.id.menu_social_stream:
                 if (!TextUtils.isEmpty(mHashTag)) {
-                    /* [ANALYTICS:EVENT]
-                     * TRIGGER:   Click on the Social Stream action on the Session Details page.
-                     * CATEGORY:  'Session'
-                     * ACTION:    'Stream'
-                     * LABEL:     session title/subtitle
-                     * [/ANALYTICS]
-                     */
-                    AnalyticsManager.sendEvent("Session", "Stream", mTitleString, 0L);
                     UIUtils.showHashtagStream(getActivity(), mHashTag);
                 }
                 return true;
@@ -1155,14 +1123,7 @@ public class SessionDetailFragment extends Fragment implements
      * Value -> 0.
      */
     void fireLinkEvent(int actionId) {
-        /* [ANALYTICS:EVENT]
-         * TRIGGER:   Click on a link on the Session Details page.
-         * CATEGORY:  'Session'
-         * ACTION:    The link's name ("Watch Live", "Follow us on Google+", etc)
-         * LABEL:     The session's title/subtitle.
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendEvent("Session", getString(actionId), mTitleString, 0L);
+        //DEPRECATED
     }
 
     /**

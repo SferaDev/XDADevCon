@@ -28,17 +28,19 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.TaskStackBuilder;
 import android.widget.Toast;
 
 import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
-import com.google.samples.apps.iosched.util.AnalyticsManager;
 
 import java.util.Arrays;
 
-import static com.google.samples.apps.iosched.util.LogUtils.*;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGE;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGI;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGW;
+import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 public class NfcBadgeActivity extends Activity {
     private static final String TAG = makeLogTag(NfcBadgeActivity.class);
@@ -50,19 +52,10 @@ public class NfcBadgeActivity extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-        AnalyticsManager.initializeAnalyticsTracker(getApplicationContext());
         // Check for NFC data
         Intent i = getIntent();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(i.getAction())) {
             LOGI(TAG, "Badge detected");
-            /* [ANALYTICS:EVENT]
-             * TRIGGER:   Scan another attendee's badge.
-             * CATEGORY:  'NFC'
-             * ACTION:    'Read'
-             * LABEL:     'Badge'. Badge info IS NOT collected.
-             * [/ANALYTICS]
-             */
-            AnalyticsManager.sendEvent("NFC", "Read", "Badge");
             readTag((Tag) i.getParcelableExtra(NfcAdapter.EXTRA_TAG));
         } else if (ACTION_SIMULATE.equals(i.getAction()) && Config.IS_DOGFOOD_BUILD) {
             String simulatedUrl = i.getDataString();
@@ -115,11 +108,6 @@ public class NfcBadgeActivity extends Activity {
         LOGD(TAG, "Recording badge, URL " + url);
         if (url.startsWith(ATTENDEE_URL_PREFIX)) {
             addToHistory(url);
-            Intent i = new Intent(this, PeopleIveMetActivity.class);
-            TaskStackBuilder
-                .create(getApplicationContext())
-                .addNextIntent(i)
-                .startActivities();
             return;
         } else {
             LOGD(TAG, "URL in badge (" + url + ") does not start with prefix URL ("

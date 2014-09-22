@@ -17,23 +17,28 @@
 package com.google.samples.apps.iosched.sync;
 
 import android.accounts.Account;
-import android.content.*;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SyncResult;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 
 import com.google.samples.apps.iosched.Config;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
-import com.google.samples.apps.iosched.service.SessionAlarmService;
 import com.google.samples.apps.iosched.service.SessionCalendarService;
-import com.google.samples.apps.iosched.sync.userdata.AbstractUserDataSyncHelper;
-import com.google.samples.apps.iosched.sync.userdata.UserDataSyncHelperFactory;
 import com.google.samples.apps.iosched.util.AccountUtils;
 import com.google.samples.apps.iosched.util.PrefUtils;
 import com.google.samples.apps.iosched.util.UIUtils;
 
 import java.io.IOException;
 
-import static com.google.samples.apps.iosched.util.LogUtils.*;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGE;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGI;
+import static com.google.samples.apps.iosched.util.LogUtils.LOGW;
+import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
 
 /**
  * A helper class for dealing with conference data synchronization.
@@ -288,24 +293,7 @@ public class SyncHelper {
      * @throws IOException if there is a problem uploading the data.
      */
     private boolean doUserScheduleSync(String accountName) throws IOException {
-        if (!isOnline()) {
-            LOGD(TAG, "Not attempting myschedule sync because device is OFFLINE");
-            return false;
-        }
-
-        LOGD(TAG, "Starting user data (myschedule) sync.");
-
-        AbstractUserDataSyncHelper helper = UserDataSyncHelperFactory.buildSyncHelper(
-                mContext, accountName);
-        boolean modified = helper.sync();
-        if (modified) {
-            // schedule notifications for the starred sessions
-            Intent scheduleIntent = new Intent(
-                    SessionAlarmService.ACTION_SCHEDULE_ALL_STARRED_BLOCKS,
-                    null, mContext, SessionAlarmService.class);
-            mContext.startService(scheduleIntent);
-        }
-        return modified;
+        return false;
     }
 
     // Returns whether we are connected to the internet.

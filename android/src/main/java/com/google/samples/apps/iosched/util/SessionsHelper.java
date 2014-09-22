@@ -16,25 +16,18 @@
 
 package com.google.samples.apps.iosched.util;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.AsyncQueryHandler;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.support.v4.app.ShareCompat;
 import android.view.MenuItem;
 
 import com.google.samples.apps.iosched.R;
 import com.google.samples.apps.iosched.appwidget.ScheduleWidgetProvider;
-import com.google.samples.apps.iosched.gcm.ServerUtilities;
 import com.google.samples.apps.iosched.provider.ScheduleContract;
-import com.google.samples.apps.iosched.sync.SyncHelper;
-import com.google.samples.apps.iosched.sync.TriggerSyncReceiver;
-import com.google.samples.apps.iosched.ui.MapFragment;
-import com.google.samples.apps.iosched.ui.phone.MapActivity;
 
 import static com.google.samples.apps.iosched.util.LogUtils.LOGD;
 import static com.google.samples.apps.iosched.util.LogUtils.makeLogTag;
@@ -52,14 +45,6 @@ public final class SessionsHelper {
         mActivity = activity;
     }
 
-    public void startMapActivity(String roomId) {
-        Intent intent = new Intent(mActivity.getApplicationContext(),
-                UIUtils.getMapActivityClass(mActivity));
-        intent.putExtra(MapFragment.EXTRA_ROOM, roomId);
-        intent.putExtra(MapActivity.EXTRA_DETACHED_MODE, true);
-        mActivity.startActivity(intent);
-    }
-
     public Intent createShareIntent(int messageTemplateResId, String title, String hashtags,
             String url) {
         ShareCompat.IntentBuilder builder = ShareCompat.IntentBuilder.from(mActivity)
@@ -71,39 +56,11 @@ public final class SessionsHelper {
 
     public void tryConfigureShareMenuItem(MenuItem menuItem, int messageTemplateResId,
             final String title, String hashtags, String url) {
-        // Intentionally removed by Roman
-//        if (UIUtils.hasICS()) {
-//            ActionProvider itemProvider = menuItem.getActionProvider();
-//            ShareActionProvider provider;
-//            if (!(itemProvider instanceof ShareActionProvider)) {
-//                provider = new ShareActionProvider(mActivity);
-//            } else {
-//                provider = (ShareActionProvider) itemProvider;
-//            }
-//            provider.setShareIntent(createShareIntent(messageTemplateResId, title, hashtags, url));
-//            provider.setOnShareTargetSelectedListener(
-//                    new ShareActionProvider.OnShareTargetSelectedListener() {
-//                        @Override
-//                        public boolean onShareTargetSelected(ShareActionProvider source, Intent intent) {
-//                            AnalyticsManager.sendEvent("Session", "Shared", title, 0L);
-//                            return false;
-//                        }
-//                    });
-//
-//            menuItem.setActionProvider(provider);
-//        }
+        //DEPRECATED
     }
 
     public void shareSession(Context context, int messageTemplateResId, String title,
             String hashtags, String url) {
-        /* [ANALYTICS:EVENT]
-         * TRIGGER:   Share a session.
-         * CATEGORY:  'Session'
-         * ACTION:    'Shared'
-         * LABEL:     session title/subtitle. Sharing details NOT collected.
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendEvent("Session", "Shared", title, 0L);
         context.startActivity(Intent.createChooser(
                 createShareIntent(messageTemplateResId, title, hashtags, url),
                 context.getString(R.string.title_share)));
@@ -123,22 +80,8 @@ public final class SessionsHelper {
         values.put(ScheduleContract.MySchedule.MY_SCHEDULE_IN_SCHEDULE, starred?1:0);
         handler.startInsert(-1, null, myScheduleUri, values);
 
-        /* [ANALYTICS:EVENT]
-         * TRIGGER:   Add or remove a session from the schedule.
-         * CATEGORY:  'Session'
-         * ACTION:    'Starred' or 'Unstarred'
-         * LABEL:     session title/subtitle
-         * [/ANALYTICS]
-         */
-        AnalyticsManager.sendEvent(
-                "Session", starred ? "Starred" : "Unstarred", title, 0L);
-
         // Because change listener is set to null during initialization, these
         // won't fire on pageview.
         mActivity.sendBroadcast(ScheduleWidgetProvider.getRefreshBroadcastIntent(mActivity, false));
-
-        // Request an immediate user data sync to reflect the starred user sessions in the cloud
-        SyncHelper.requestManualSync(AccountUtils.getActiveAccount(mActivity), true);
-
     }
 }

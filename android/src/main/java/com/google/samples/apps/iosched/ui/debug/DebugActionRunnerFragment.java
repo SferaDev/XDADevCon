@@ -44,15 +44,10 @@ public class DebugActionRunnerFragment extends Fragment {
         mLogArea = (TextView) rootView.findViewById(R.id.logArea);
         ViewGroup tests = (ViewGroup) rootView.findViewById(R.id.debug_action_list);
         tests.addView(createTestAction(new ForceSyncNowAction()));
-        tests.addView(createTestAction(new ListStarredSessionsDebugAction()));
-        tests.addView(createTestAction(new ShowAllDriveFilesDebugAction()));
-        tests.addView(createTestAction(new ForceAppDataSyncNowAction()));
         tests.addView(createTestAction(new TestScheduleHelperAction()));
         tests.addView(createTestAction(new ScheduleStarredSessionAlarmsAction()));
         tests.addView(createTestAction(new SimulateBadgeScannedAction()));
         tests.addView(createTestAction(new ShowFeedbackNotificationAction()));
-        tests.addView(createTestAction(new ShowSessionNotificationDebugAction()
-        ));
         return rootView;
     }
 
